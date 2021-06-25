@@ -1,0 +1,203 @@
+@import "./root.scss";
+
+.blueprint-editor {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  overflow: hidden;
+
+  canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #282c34;
+  }
+}
+.blueprint-continer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+}
+.blueprint-editor-panel {
+  background-color: $background-second-color;
+  border: 1px solid $border-color-dark;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+//添加单元浮动菜单
+.blueprint-float-panel {
+  position: absolute;
+  min-width: 230px;
+  padding: 10px 4px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  color: #929292;
+  z-index: 65;
+  max-height: 500px;
+  overflow: hidden;
+  overflow-y: scroll;
+  padding: 12px 8px;
+  font-size: 0.8rem;
+
+  @include pc-fix-scrollbar();
+
+  > .input {
+    position: relative;
+    display: block;
+    margin: 6px 0 ;
+
+    input {
+      width: calc(100% - 8px);
+    }
+
+    .small-button {
+      position: absolute;
+      top: 2px;
+      right: 3px;
+    }
+  }
+}
+.blueprint-block-list {
+  position: relative;
+
+  .item {
+    display: block;
+    padding: 0px 13px;
+    margin-left: -8px;
+    cursor: default;
+    border-radius: 4px;
+
+    img, .logo {
+      display: inline-block; 
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    h5 {
+      font-size: 1rem;
+    }
+    span {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    &:hover {
+      background-color: rgba(183, 219, 232, 0.3);
+    }
+    &:active {
+      opacity: 0.7;
+    }
+  
+  }
+
+}
+
+//调整缩放工具
+.blueprint-editor-zoom-tool {
+
+  position: absolute;
+  width: 90px;
+  height: 26px;
+  right: 40px;
+  bottom: 25px;
+  border-radius: 15px;
+  background-color: #2F2F2C;
+  opacity: 0.4;
+  transition: opacity ease-in-out 0.2s;
+  text-align: center;
+  z-index: 20;
+
+  &:hover, &:active {
+    outline: none;
+    opacity: 1;
+  }
+
+  a {
+    position: absolute;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    color: #fff;
+    padding: 0;
+    font-size: 16px;
+    top: 1px;
+    line-height: 24px;
+    border-radius: 50%;
+
+    &.left { left: 1px; }
+    &.right { right: 1px; }
+
+    &:hover {
+      color: #2F2F2C;
+      background-color: #fff;
+    }
+  }
+  select {
+    position: absolute;
+    opacity: 0;
+    left: 28px;
+    top: 4px;
+    width: 35px;
+    cursor: pointer;
+    z-index: 2;
+  }
+  span {
+    position: absolute;
+    display: inline-block;
+    text-align: center;
+    height: 15px;
+    width: 35px;
+    line-height: 15px;
+    left: 28px;
+    top: 6px;    
+    font-size: 0.7rem;
+
+    color: #fff;
+    cursor: pointer;
+  }
+
+}
+
+//可折叠列表
+.collapse-list {
+  position: relative;
+}
+.collapse-item {
+  display: block;
+  padding: 1px 1px 1px 7px;
+
+  .blueprint-block-list {
+    margin-left: 13px;
+    margin-top: 2px;
+  }
+
+  .collapse-title {
+    display: block;
+    user-select: none;
+    cursor: pointer;
+
+    i {
+      transition: transform ease-in-out 0.2s;
+    }
+
+    &:hover {
+      color: rgb(69,180,245);
+
+      i {
+        color: rgb(69,180,245);
+      }
+    }
+  }
+  .collapse-arrow {
+    color: #000;
+    margin-right: 3px;
+  }
+}

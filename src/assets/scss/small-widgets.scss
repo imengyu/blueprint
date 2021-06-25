@@ -1,0 +1,224 @@
+@import "./root.scss";
+
+/*Link style*/
+
+a {
+
+  color: #4698f7;
+  text-decoration: none;
+  transition: all ease-in-out .2s;
+
+  &:hover, &:active {
+    color: #2b67e7;
+    text-decoration: none;
+  }
+
+}
+
+.small-button {
+  text-decoration: none;
+  color: $tab-button-normal-color;
+  user-select: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 2px 4px;
+
+  &:hover {
+    background-color: $tab-button-hover-color;
+    border-radius: 3px;
+    color: #fff;
+  }
+}
+
+.small-input {
+  display: inline-block;
+  padding: 4px 6px;
+  background-color: #686868;
+  color: rgb(255, 255, 255);
+  outline: none;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+
+  &::-webkit-input-placeholder {
+    color: #bbbbbb;
+  }
+
+  &:disabled {
+    background-color: #4b4b4b;
+    color: #919191;
+
+    &:hover , &:active {
+      background-color: #686868;
+      color: #e7e7e7;
+    }
+  }
+
+  &:hover, &:active, &:focus {
+    background-color: #919191;
+    color: #000;
+  }
+}
+
+.btn-add {
+  height: 30px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20class%3D%22icon%22%20viewBox%3D%220%200%201024%201024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2228%22%20height%3D%2228%22%3E%3Cpath%20d%3D%22M488%20488V192a16%2016%200%200%201%2016-16h16a16%2016%200%200%201%2016%2016v296H832a16%2016%200%200%201%2016%2016v16a16%2016%200%200%201-16%2016H536V832a16%2016%200%200%201-16%2016h-16a16%2016%200%200%201-16-16V536H192a16%2016%200%200%201-16-16v-16a16%2016%200%200%201%2016-16h296z%22%20fill%3D%22%23000%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E");
+  background-size: 26px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+
+  &.round {
+    width: 30px;
+    border-radius: 50%;
+    padding: 5px;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+  &.no-background {
+    background-image: none;
+    text-align: center;
+  }
+
+  i {
+    font-size: 1.5rem;
+    line-height: 30px;
+  }
+}
+.btn-round {
+  display: inline-block;
+
+  height: 30px;
+  width: 30px;
+  background-size: 26px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  
+  border-radius: 50%;
+  padding: 5px;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.common-a-button {
+  display: inline-block;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #000;
+
+  &.big {
+    padding: 6px 8px;
+    font-size: 1.5rem;
+  }
+  &.small {
+    padding: 5px;
+    font-size: 1.2rem;
+  }
+  &.mini {
+    padding: 2px;
+    font-size: 1rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+  &:disabled,&.disabled {
+    color: #888;
+    cursor: default;
+  }
+
+  &+& {
+    margin-left: 2px;
+  }
+}
+
+$tab-size: 30px;
+
+.horz-tab {
+  display: block;
+  position: relative;
+  height: 100%;
+  background-color: $tab-mormal-color;
+
+  .tabs {
+    display: inline-block;
+    position: absolute;
+    width: $tab-size;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    &::before {
+      display: inline-block;
+      position: absolute;
+      content: '';
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 1px;
+      z-index: 0;
+      background-color: $tab-border-color;
+    }
+
+    .item {
+      position: relative;
+      display: inline-flex;
+      padding: 0px;
+      margin: 2px 0;
+      cursor: pointer;
+      color: #ffffff;
+      border: 1px solid transparent;
+      justify-content: center;
+      align-items: center;
+      height: $tab-size;
+      width: $tab-size;
+      vertical-align: middle;
+
+      .icon {
+        display: inline-block;
+      } 
+
+      &:hover {
+        background-color: $tab-active-color;
+      }
+      &.active {
+        background-color: $tab-active-color;
+        border-right-color: $tab-active-color;
+        border-bottom-color: $tab-border-color;
+        border-left-color: $tab-border-color;
+        border-top-color: $tab-border-color;
+
+        &::before {
+          position: absolute;
+          display: inline-block;
+          content: '';
+          width: 100%;
+          bottom: -1px;
+          left: 0;
+          background-color: $tab-border-color;
+        }
+      }    
+    }
+  }
+  .content {
+    position: absolute;
+    background-color: $tab-active-color;
+    left: $tab-size;
+    top: 0;
+    bottom: 0;
+    right: 0;
+
+    > div {
+      display: block;
+      height: 100%;
+    }
+  }
+}
+
+
+

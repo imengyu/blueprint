@@ -1,0 +1,122 @@
+.custom-editor {
+  display: inline-block;
+
+  input[type="text"],input[type="password"], textarea, select, .prop-box {
+    display: inline-block;
+    padding: 2px 5px;
+    background-color: rgba(104, 104, 104, 0.5);
+    color: rgb(255, 255, 255);
+    outline: none;
+    border: none;
+    border-radius: 6px;
+    vertical-align: middle;    
+    font-family: 'Microsoft Yahei', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 12px;
+
+    &::-webkit-input-placeholder {
+      color: #bbbbbb;
+    }
+
+    &:disabled {
+      background-color: rgba(75, 75, 75, 0.514);
+      color: #919191;
+
+      &:hover , &:active {
+        background-color: #686868;
+        color: #e7e7e7;
+      }
+    }
+
+    &:hover , &:active {
+      background-color: #fff;
+      color: #000;
+    }
+  }
+  input[type="checkbox"] {
+
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+    background: transparent;
+    appearance: none;
+    height: 18px;
+    width: 18px;
+    overflow: hidden;
+
+    &:after {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      top: 0px;
+      content: "";
+      background-color: #292929;
+      color: #ffffff;
+      border-radius: 6px;
+      border: none;
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      font-family: 'iconfont';
+
+      &:hover {
+        background-color:#777777;
+      }
+      &:active {
+        background-color:#181818;
+      }
+    }
+    &[disabled=disabled]:after {
+      background-color:#8f8f8f;
+      color: #e2e2e2;
+
+      &:hover {
+        background-color:#8f8f8f;
+      }
+    }
+    &:checked:after {
+      content: "\e852";
+    }
+  }
+
+}
+.comment-editor {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+
+  &:hover, &:active {
+    background-color: #fff!important;
+  }
+}
+.check-input {
+  white-space: normal;
+
+  input {
+    border: 2px solid transparent;
+  }
+
+  .error-text {
+    display: none;
+    margin-top: 3px;
+    color: #f76758;
+  }
+
+  &.error {
+
+    input {
+      border: 2px solid #f76758;
+      color: #ff503c;
+    }
+
+    .error-text {
+      display: inline-block;
+    }
+  }
+}
+.input-border {
+  border: 21px solid transparent;
+}
+.input-error {
+  border: 2px solid #f76758!important;
+}
+.input-warn {
+  border: 2px solid #daa000!important;
+}

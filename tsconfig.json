@@ -12,7 +12,9 @@
     "sourceMap": true,
     "baseUrl": ".",
     "types": [
-      "webpack-env"
+      "webpack-env",
+      "mocha",
+      "./src/types",
     ],
     "paths": {
       "@/*": [
@@ -35,5 +37,5 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
 }
