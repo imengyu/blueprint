@@ -3,7 +3,7 @@ const StringUtils = {
    * 字符串判空
    * @param str 字符串
    */
-  isNullOrEmpty(str : string | undefined | null | Record<string, unknown>) : boolean {
+  isNullOrEmpty(str : string | undefined | null | Record<string, unknown>| number) : boolean {
     return !str || typeof str === 'undefined' || str === ''
   },
   /**
@@ -59,7 +59,7 @@ function isNumber(val : string) : boolean {
  * @param {String} val 
  */
  function isInteger(val : string) : boolean {
-  return /"^-?\\d+$"/.test(val);
+  return /^-?[0-9]\d*$/.test(val);
 }
 /**
  * 检查字符串是否是中国的11位手机号

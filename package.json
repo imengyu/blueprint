@@ -9,9 +9,12 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.0.7",
     "core-js": "^3.6.5",
+    "element-plus": "^1.0.2-beta.54",
     "mocha": "^9.0.1",
-    "vue": "^3.0.0",
+    "vue": "^3.1.4",
+    "vue-final-modal": "^3.3.1",
     "vue-router": "^4.0.0-0",
     "vue-test-utils": "^1.0.0-beta.11",
     "vuex": "^4.0.0-0"

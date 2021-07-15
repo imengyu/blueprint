@@ -1,4 +1,5 @@
 import { Vector2 } from "@/model/Base/Vector2";
+import HtmlUtils from "@/model/Utils/HtmlUtils";
 import RandomUtils from "@/model/Utils/RandomUtils";
 import StringUtils from "@/model/Utils/StringUtils";
 import { App } from "vue";
@@ -8,27 +9,7 @@ let showTooltipId = 0;
 let lastHideTooltipId = 0;
 
 export default {
-  registerElementTooltip,
-  unregisterElementTooltip,
-  updateElementTooltip,
-  closeElementTooltip,
-  createTooltip(target : 'body'|HTMLElement) : void {
-    ele = document.createElement('div');
-    ele.classList.add('tooltip');
-    ele.style.display = 'none';
-
-    if(target === 'body')
-      document.body.appendChild(ele);
-    else
-      target.appendChild(ele);
-    ele.addEventListener('mouseenter', () => {
-      clearHideTooltipDelay();
-    })
-    ele.addEventListener('mouseleave', () => {
-      registerHideTooltipDelay(() => hideTooltip(lastHideTooltipId));
-    })
-  },
-  createVueDirective(app : App)  : void{
+  install(app : App) : void{
     app.directive('tooltip', {
       mounted: (el) => {
         registerElementTooltip(el);
@@ -41,21 +22,59 @@ export default {
         unregisterElementTooltip(el);
       },
     });
+    createTooltip('body');
   }
 }
 
-function showTooltip(text : string, pos ?: Vector2) : number {
+function createTooltip(target : 'body'|HTMLElement) : void {
+  ele = document.createElement('div');
+  ele.classList.add('tooltip');
+  ele.style.display = 'none';
+
+  if(target === 'body')
+    document.body.appendChild(ele);
+  else
+    target.appendChild(ele);
+  ele.addEventListener('mouseenter', () => {
+    clearHideTooltipDelay();
+  })
+  ele.addEventListener('mouseleave', () => {
+    registerHideTooltipDelay(() => hideTooltip(lastHideTooltipId));
+  })
+}
+
+function showTooltip(text : string, pos : Vector2) : number {
+
+  pos.y += 30;
+
   const _ele = (ele as HTMLElement);
   _ele.style.display = StringUtils.isNullOrEmpty(text) ? 'none' : '';
-  if (pos) {
-    pos.y += 30;
-    _ele.style.left = (pos.x > 0 ? pos.x + 'px': '');
-    _ele.style.top = (pos.y > 0 ? pos.y + 'px' : '');
-    _ele.style.right = (pos.x < 0 ? -pos.x + 'px': '');
-    _ele.style.bottom = (pos.y < 0 ? -pos.y + 'px' : '');
-    showTooltipId = RandomUtils.genRandom(0, 1024);
-  }
   _ele.innerHTML = text;
+
+  showTooltipId = RandomUtils.genRandom(0, 1024);
+
+  const screenWidth = window.innerWidth, screenHeight = window.innerHeight;
+
+  if(_ele.offsetHeight > screenHeight)
+    _ele.style.maxHeight = `${screenHeight}px`;
+  else
+    _ele.style.maxHeight = '';
+  if(_ele.offsetWidth > screenWidth)
+    _ele.style.maxWidth = `${screenWidth}px`;
+  else
+    _ele.style.maxWidth = '';
+
+  const right = pos.x + _ele.offsetWidth;
+  if(right > screenWidth)
+    pos.x += screenWidth - right - 10;
+
+  const bottom = pos.y + _ele.offsetHeight;
+  if(bottom > screenHeight)
+    pos.y += screenHeight - bottom - 10;
+
+  _ele.style.left = pos.x + 'px';
+  _ele.style.top = pos.y + 'px';
+
   return showTooltipId;
 }
 function hideTooltip(id : number) : void {
@@ -71,11 +90,6 @@ function unregisterElementTooltip(el : HTMLElement) : void {
   el.removeEventListener('mouseenter', elementTooltipMouseEnter);
   el.removeEventListener('mouseleave', elementTooltipMouseLeave);
   el.removeEventListener('mousedown', elementTooltipMouseDown);
-}
-function updateElementTooltip(el : HTMLElement, text : string) : void {
-  el.setAttribute('data-title', text);
-  if(el.getAttribute('data-tooltip-enter') == 'true')
-    showTooltip(el.getAttribute('title') || el.getAttribute('data-title') || '');
 }
 function closeElementTooltip(el : HTMLElement) : void {
   const id = el.getAttribute('data-tooltip-id') || '';
@@ -94,8 +108,8 @@ function elementTooltipMouseEnter(e : MouseEvent) : void {
   const title = el.getAttribute('title') || el.getAttribute('data-title') || '';
   el.setAttribute('data-tooltip-enter', 'true');
   if(!StringUtils.isNullOrEmpty(title)) {
-    clearHideTooltipDelay();
     registerShowTooltipDelay(() => {
+      clearHideTooltipDelay();
       if(el.getAttribute('data-tooltip-enter') == 'true') {
         lastHideTooltipId = showTooltip(title, new Vector2(e.x, e.y))
         el.setAttribute('data-tooltip-id', lastHideTooltipId.toString());

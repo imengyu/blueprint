@@ -69,6 +69,10 @@ export interface IBluePrintFlowPortDefine {
    */
   isStatic?: boolean;
   /**
+   * 指示这个端口是否是弹性的端口，它在连接时会触发单元的 onFlexPortConnect 事件，默认为 false
+   */
+  isFlexible?: boolean;
+  /**
    * 这个端口的起始值，默认为null
    */
   initialValue ?: SaveableTypes|null,
@@ -202,7 +206,7 @@ export class BluePrintFlowPort {
   public checkTypeAllow(targetPort : BluePrintFlowPort) : boolean {
 
     const targetType = targetPort.define.type;
-    const thisType = targetPort.define.type;
+    const thisType = this.define.type;
 
     //判断是否是执行
     if(thisType.isExecute()) return targetType.isExecute();
@@ -232,7 +236,7 @@ export class BluePrintFlowPort {
     return this.define.type.getTypeColor();
   }
   public getTypeEditor() : null|BluePrintParamEditorDefine {
-    return ParamTypeService.getCustomTypeEditor(this.define.type.getType());
+    return ParamTypeService.getCustomTypeEditor(this.define.type.getTypeName());
   }
   /**
    * 更新当前端口的编辑器元素
@@ -274,6 +278,7 @@ export class BluePrintFlowPortDefine extends SaveableObject implements IBluePrin
       this.isRefPassing = CommonUtils.defaultIfUndefined(define.isRefPassing, this.isRefPassing);
       this.isStatic = CommonUtils.defaultIfUndefined(define.isStatic, this.isStatic);
       this.isAsync = CommonUtils.defaultIfUndefined(define.isAsync, this.isAsync);
+      this.isFlexible = CommonUtils.defaultIfUndefined(define.isFlexible, this.isFlexible);
       this.forceNoEditorControl = CommonUtils.defaultIfUndefined(define.forceNoEditorControl, this.forceNoEditorControl);
       this.forceEditorControlOutput = CommonUtils.defaultIfUndefined(define.forceEditorControlOutput, this.forceEditorControlOutput);
       this.forceNoCycleDetection = CommonUtils.defaultIfUndefined(define.forceNoCycleDetection, this.forceNoCycleDetection);
@@ -291,6 +296,7 @@ export class BluePrintFlowPortDefine extends SaveableObject implements IBluePrin
   public isRefPassing = false;
   public isStatic = false;
   public isAsync = false;
+  public isFlexible = false;
   public forceNoEditorControl = false;
   public forceEditorControlOutput = false;
   public forceNoCycleDetection = false;

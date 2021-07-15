@@ -45,8 +45,8 @@ export class ParamTypeServiceClass {
    * 检查这个类型能不能用来作为集合的键
    * @param name 类型名称
    */
-  public checkTypeCanBeDictionaryKey(name : string) : boolean  {
-    switch(name) {
+  public checkTypeCanBeDictionaryKey(type : BluePrintParamType) : boolean  {
+    switch(type.baseType) {
       case 'any':
       case 'number':
       case 'bigint': 
@@ -54,8 +54,8 @@ export class ParamTypeServiceClass {
       case 'string': return true;
       case 'custom':
       default: {
-        const type = ParamTypeService.getCustomType(name);
-        if(type && typeof type.getHashCode == 'function') 
+        const typeCustom = ParamTypeService.getCustomType(type.customType);
+        if(typeCustom && typeof typeCustom.getHashCode == 'function') 
           return true;
       }
     }
@@ -104,11 +104,9 @@ export class ParamTypeServiceClass {
    * @param fromType 源类型
    * @param toType 要转为的类型
    */
-  public getTypeCoverter(fromType : BluePrintParamType, toType : BluePrintParamType) : BluePrintParamTypeConverterDefine|null {
-    if(fromType.isExecute() || toType.isExecute()) 
-      return null;
-    const from = fromType.toString();
-    const to = toType.toString();
+  public getTypeCoverter(fromType : BluePrintParamType|string, toType : BluePrintParamType|string) : BluePrintParamTypeConverterDefine|null {
+    const from = typeof fromType === 'string' ? fromType : fromType.toString();
+    const to = typeof toType === 'string' ? toType : toType.toString();
     let typeChild = this.allTypeConverter.get(from);
     if(typeChild == null) 
       typeChild = this.allTypeConverter.get('any');
@@ -135,8 +133,7 @@ export class ParamTypeServiceClass {
       this.registerTypeCoverter({
         fromType: new BluePrintParamType('string'),
         toType: new BluePrintParamType('enum', reg.name),
-        converter: {},
-        allowSetType: 'variable',
+        converter: {}
       });
     this.onTypeChanged.invoke('add', reg.name, reg);
     return reg;

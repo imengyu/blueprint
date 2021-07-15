@@ -15,8 +15,6 @@ export class BluePrintBackgroundRendererOptions {
   gridSize = 20;
   gridColorSmall = "rgb(32,32,32)";
   gridColorBig = "rgb(16,16,16)";
-  drawDebugInfo = true;
-  drawChunkDebugInfo = true;
 }
 
 /**
@@ -80,8 +78,8 @@ export class BluePrintEditorViewport extends SaveableObject {
    */
   viewportPointToScreenPoint(point: Vector2, dest: Vector2): void {
     dest.set(
-      (point.x - this.editorAbsolutePos.x) - this.position.x,
-      (point.y - this.editorAbsolutePos.y) - this.position.y
+      point.x - this.position.x + this.editorAbsolutePos.x,
+      point.y - this.position.y + this.editorAbsolutePos.y
     );
   }
   /**
@@ -94,6 +92,13 @@ export class BluePrintEditorViewport extends SaveableObject {
       this.position.x + (point.x - this.editorAbsolutePos.x),
       this.position.y + (point.y - this.editorAbsolutePos.y)
     );
+  }
+  /**
+   * 屏幕坐标减去编辑器绝对坐标
+   */
+   fixScreenPosWithEditorAbsolutePos(point: Vector2): Vector2 {
+    point.substract(this.editorAbsolutePos);
+    return point
   }
 }
 

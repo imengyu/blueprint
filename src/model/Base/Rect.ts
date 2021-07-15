@@ -15,6 +15,7 @@ export class Rect extends SaveableObject {
   public constructor(x ? : number | Rect, y? : number, w? : number, h? : number) {
     super();
     this.saveClassName = 'Rect';
+    this.saveableProperties = [ 'x', 'y', 'w', 'h' ]
     this.set(x,y,w,h);
   }
 

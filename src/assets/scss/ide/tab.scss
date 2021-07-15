@@ -1,0 +1,84 @@
+@import '../root.scss';
+
+$tab-size: 30px;
+
+.horz-tab {
+  display: block;
+  position: relative;
+  height: 100%;
+  background-color: $tab-mormal-color;
+
+  .tabs {
+    display: inline-block;
+    position: absolute;
+    width: $tab-size;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    &::before {
+      display: inline-block;
+      position: absolute;
+      content: '';
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 1px;
+      z-index: 0;
+      background-color: $tab-border-color;
+    }
+
+    .item {
+      position: relative;
+      display: inline-flex;
+      padding: 0px;
+      margin: 2px 0;
+      cursor: pointer;
+      color: #ffffff;
+      border: 1px solid transparent;
+      justify-content: center;
+      align-items: center;
+      height: $tab-size;
+      width: $tab-size;
+      vertical-align: middle;
+
+      .icon {
+        display: inline-block;
+      } 
+
+      &:hover {
+        background-color: $tab-active-color;
+      }
+      &.active {
+        background-color: $tab-active-color;
+        border-right-color: $tab-active-color;
+        border-bottom-color: $tab-border-color;
+        border-left-color: $tab-border-color;
+        border-top-color: $tab-border-color;
+
+        &::before {
+          position: absolute;
+          display: inline-block;
+          content: '';
+          width: 100%;
+          bottom: -1px;
+          left: 0;
+          background-color: $tab-border-color;
+        }
+      }    
+    }
+  }
+  .content {
+    position: absolute;
+    background-color: $tab-active-color;
+    left: $tab-size;
+    top: 0;
+    bottom: 0;
+    right: 0;
+
+    > div {
+      display: block;
+      height: 100%;
+    }
+  }
+}

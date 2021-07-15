@@ -3,12 +3,12 @@ import { EventHandler, VoidDelegate } from "../Base/EventHandler";
 import { Rect } from "../Base/Rect";
 import { Vector2 } from "../Base/Vector2";
 import { CustomStorageObject, IKeyValueObject, SaveableTypes } from "../BluePrintEditorBase";
-import { BluePrintEditorInfo } from '../BluePrintEditor'
+import { BluePrintEditorInstance } from '../BluePrintEditor'
 import { CreateObjectFactory, SaveableObject } from "../Utils/SaveObject";
 import { BluePrintFlowConnector } from "./BluePrintFlowConnector";
 import { BluePrintFlowGraph } from "./BluePrintFlowDoc";
 import { BluePrintFlowPort, BluePrintFlowPortCreateEditorFunction, BluePrintFlowPortDefine, BluePrintFlowPortDirection, IBluePrintFlowPortDefine } from "./BluePrintFlowPort";
-import { BluePrintParamType } from "./BluePrintParamType";
+import { BluePrintParamSetType, BluePrintParamType } from "./BluePrintParamType";
 import CommonUtils from "../Utils/CommonUtils";
 import RandomUtils from "../Utils/RandomUtils";
 import logger from "../Base/Logger";
@@ -89,6 +89,10 @@ export interface IBluePrintFlowBlockDefine  {
    * 单元自定义事件设置
    */
   events ?: IBluePrintFlowBlockEventSettings,
+  /**
+   * 单元自定义菜单
+   */
+  menu ?: BluePrintFlowBlockMenuSettings,
 }
 /**
  * 单元样式设置
@@ -197,7 +201,26 @@ export interface IBluePrintFlowBlockEventSettings {
    * @return 返回一个字符串信息表示错误信息；返回null表示无错误，用户可以继续连接。
    */
   onPortConnectCheck ?: (block: BluePrintFlowBlock, startPort: BluePrintFlowPort, endPort: BluePrintFlowPort) => string|null;
-  
+  /**
+   * 弹性端口连接时触发。
+   * @param block 当前用户操作的单元
+   * @param thisPort 当前端口
+   * @param anotherPort 另外一个端口
+   */
+  onFlexPortConnect ?: (block: BluePrintFlowBlock, thisPort: BluePrintFlowPort, anotherPort: BluePrintFlowPort) => void;
+  /**
+   * 在用户连接端口时触发。
+   * @param block 当前用户操作的单元
+   * @param port 当前端口
+   */
+  onPortConnect ?: (block: BluePrintFlowBlock, port: BluePrintFlowPort) => void;
+  /**
+   * 在用户断开端口的连接时触发。
+   * @param block 当前用户操作的单元
+   * @param port 当前端口
+   */
+  onPortUnConnect ?: (block: BluePrintFlowBlock, port: BluePrintFlowPort) => void;
+
   /**
    * 单元初始化时的回调。
    * 通常在这个回调里面进行单元初始化的一些工作.
@@ -488,6 +511,43 @@ export class BluePrintFlowBlock extends SaveableObject {
     }
     return null;
   }
+  /**
+   * 更改参数端口的数据类型
+   * @param port 参数端口
+   * @param newType 新的数据类型
+   * @param changeSetType 是否更改集合类型
+   * @param changeKeyType 是否更改键类型
+   */
+  public changePortParamType(port : BluePrintFlowPort, newType: BluePrintParamType, changeSetType = false, changeKeyType = false) : void {
+    if(!port)
+      logger.error(this.getName(), 'changePortParamType: Must provide port');
+    else if(port.parent == this) {
+
+      port.define.type.setTypeName(newType as BluePrintParamType);
+
+      if(changeKeyType)
+        port.define.type.dictionaryKeyType = newType.dictionaryKeyType;
+      if(changeSetType)
+        port.define.type.setType = newType.setType;
+      
+      port.connectedFromPort.forEach((c) => c.updatePortValue());
+      port.connectedToPort.forEach((c) => c.updatePortValue());
+    }
+  }
+  /**
+   * 更改参数端口的数据集合类型
+   * @param port 参数端口
+   * @param newSetType 新的集合类型
+   */
+  public changePortParamSetType(port : BluePrintFlowPort, newSetType: BluePrintParamSetType) : void {
+    if(!port)
+      logger.error(this.getName(), 'changePortParamType: Must provide port');
+    else if(port.parent == this) {
+      port.define.type.setType = newSetType;
+      port.connectedFromPort.forEach((c) => c.updatePortValue());
+      port.connectedToPort.forEach((c) => c.updatePortValue());
+    }
+  }
 
   public markContent = '';
   public markOpen = false;
@@ -501,17 +561,23 @@ export class BluePrintFlowBlock extends SaveableObject {
   public mouseDown = false;
   public mouseDownInPort = false;
   public mouseConnectingPort = false;
+  /**
+   * 是否需要修复位置移动到自身中心
+   */
+  public shouldMoveToSelfCenter = false;
   public lastMovedBlock = false;
   public mouseLastDownPos = new Vector2();
   public lastBlockPos = new Vector2();
   public lastBlockSize = new Vector2();
   public connectors = new Array<BluePrintFlowConnector>();
   public graph : BluePrintFlowGraph|null = null;
+  public breakpointTriggered = false;
+  
 
   /**
    * 获取当前单元编辑器实例信息
    */
-  public editorInfo : BluePrintEditorInfo|null = null;
+  public editor : BluePrintEditorInstance|null = null;
   /**
    * 获取当前单元是否添加到编辑器中
    */
@@ -521,6 +587,7 @@ export class BluePrintFlowBlock extends SaveableObject {
   public callbackUpdateRegion : VoidDelegate|null = null;
   public callbackGetCurrentSizeType : (() => number)|null = null;
   public callbackForceUpdate : VoidDelegate|null = null;
+  public callbackTwinkle : ((time: number) => void)|null = null;
 
   //实时事件
   //============================================
@@ -574,6 +641,13 @@ export class BluePrintFlowBlock extends SaveableObject {
    * 更新移动之前的位置
    */
   public updateLastPos() : void { this.lastBlockPos.set(this.position); }
+  /**
+   * 闪烁
+   */
+  public twinkle(time = 1000) : void {
+    if(typeof this.callbackTwinkle === 'function') 
+      return this.callbackTwinkle(time);
+  }
 
 }
 export class BluePrintFlowBlockDefine implements IBluePrintFlowBlockDefine {
@@ -592,6 +666,7 @@ export class BluePrintFlowBlockDefine implements IBluePrintFlowBlockDefine {
   public style : BluePrintFlowBlockStyleSettings;
   public events : IBluePrintFlowBlockEventSettings = {} as IBluePrintFlowBlockEventSettings;
   public ports : Array<IBluePrintFlowPortDefine> = [];
+  public menu : BluePrintFlowBlockMenuSettings = new BluePrintFlowBlockMenuSettings();
 
   public constructor(define : IBluePrintFlowBlockDefine) {
     this.guid = define.guid;
@@ -608,6 +683,7 @@ export class BluePrintFlowBlockDefine implements IBluePrintFlowBlockDefine {
     this.canNotDelete = CommonUtils.defaultIfUndefined(define.canNotDelete, this.canNotDelete);
     this.version = define.version;
     this.style = new BluePrintFlowBlockStyleSettings(define.style);
+    this.menu = CommonUtils.defaultIfUndefined(define.menu, this.menu);
   }
 }
 export class BluePrintFlowBlockStyleSettings implements IBluePrintFlowBlockStyleSettings  {
@@ -651,4 +727,23 @@ export class BluePrintFlowBlockStyleSettings implements IBluePrintFlowBlockStyle
   public layer : 'normal'|'background' = 'normal';
   public customClassNames = "";
 
+}
+
+export interface MenuItemForBlock {
+  label ?: string,
+  icon ?: string,
+  disabled ?: boolean,
+  divided ?: boolean,
+  customClass ?: string,
+  maxWidth ?: number,
+  minWidth ?: number,
+  onClick ?: (this: BluePrintFlowBlock) => void,
+  children ?: MenuItemForBlock[],
+}
+
+export class BluePrintFlowBlockMenuSettings  {
+  /**
+   * 自定义菜单
+   */
+  public items : Array<MenuItemForBlock> = [];
 }

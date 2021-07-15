@@ -8,7 +8,7 @@
         <i :class="'collapse-arrow iconfont ' + (item.open ? 'icon-arrow-down-1' : 'icon-arrow-right-')"></i>
         {{ item.category }}
       </span>
-      <BlockListCategory v-show="item.open" :categoryData="item" @on-block-item-click="(block) => $emit('on-block-item-click', block)">
+      <BlockListCategory v-show="item.open" :categoryData="item">
       </BlockListCategory>
     </div>
 
@@ -19,7 +19,7 @@
         v-show="item.show && item.filterShow && !item.define.hideInAddPanel"
         :key="index"
         :draggable="isAddDirectly ? 'false' : 'true'"
-        @click="$emit('on-block-item-click', item.define)"
+        @click="onClick(item)"
         @dragstart="onDrag(item, $event)" >
         <img :src="item.define.style.logo" />
         {{ item.define.name }}
@@ -30,13 +30,13 @@
 </template>
 
 <script lang="ts">
+import { BluePrintFlowBlockDefine } from '@/model/Flow/BluePrintFlowBlock';
 import { CategoryData, CategoryDataItem } from '@/model/Services/BlockRegisterService';
 import HtmlUtils from '@/model/Utils/HtmlUtils';
 import { defineComponent, PropType } from 'vue'
 
 export default defineComponent({
   name: 'BlockListCategory',
-  emits: [ 'on-block-item-click' ],
   props: {
     categoryData: {
       type: Object as PropType<CategoryData>
@@ -46,6 +46,7 @@ export default defineComponent({
       default: false
     },
   },
+  inject: [ 'addBlock' ],
   methods: {
     onDrag(item : CategoryDataItem, e : DragEvent) {
       if(HtmlUtils.isEventInControl(e)) { 
@@ -55,6 +56,11 @@ export default defineComponent({
       else if(e.dataTransfer) {
         e.dataTransfer.setData('text/plain', 'drag:block:' + item.define.guid);
       }
+    },
+    onClick(item : CategoryDataItem) {
+      (this as unknown as {
+        addBlock: (block: BluePrintFlowBlockDefine) => void;
+      }).addBlock(item.define);
     }
   }
 })

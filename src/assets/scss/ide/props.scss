@@ -1,0 +1,182 @@
+@import '../root.scss';
+
+//属性列表
+.prop-host {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  padding-top: 15px;
+
+  overflow: hidden;
+  overflow-y: scroll;
+
+  @include pc-fix-scrollbar-white();
+
+  textarea {
+    resize: vertical;
+    min-width: 100px;
+  }
+  input[type="text"],input[type="password"], textarea, select, .prop-box {
+    display: inline-block;
+    padding: 2px 5px;
+    background-color: #686868;
+    color: rgb(255, 255, 255);
+    outline: none;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Microsoft Yahei', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 13px;
+
+    &::-webkit-input-placeholder {
+      color: #bbbbbb;
+    }
+
+    &:disabled {
+      background-color: #4b4b4b;
+      color: #919191;
+
+      &:hover , &:active {
+        background-color: #686868;
+        color: #e7e7e7;
+      }
+    }
+
+    &:hover, &:active, &:focus {
+      background-color: #fff;
+      color: #000;
+    }
+  }
+  input[type="checkbox"] {
+
+    display: inline-block;
+    position: relative;
+    background: transparent;
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    overflow: hidden;
+    background-color: $background-second-color;
+    border: 1px solid $border-color-dark;
+    border-radius: 6px;
+    text-align: center;
+    margin: 0;
+
+    &:after {
+      display: inline-block;
+      top: 0px;
+      content: "";
+      color: #ffffff;
+      padding-top: 1px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      font-family: 'iconfont';
+    }
+    &[disabled=disabled]:after {
+      background-color:$background-color;
+      color: #e2e2e2;
+
+      &:hover {
+        background-color: $background-color;
+      }
+    }
+    &:hover {
+      background-color: $background-second-color-light;
+    }
+    &:active, &:focus {
+      outline: none;
+    }
+    &:checked:after {
+      content: "\e852";
+    }
+  }
+}
+.prop-list {
+  position: relative;
+
+  .prop-list-item {
+    position: relative;
+    padding: 4px 5px;
+    background-color: #424753;
+    margin: 3px;
+    border-radius: 8px;
+
+    a {
+      color: #b3b3b3;
+      padding: 2px 5px;
+      background-color: #1f2b36;
+      border-radius: 6px;
+
+      &:hover, &:focus {
+        color: #000;
+        background-color: #fff;
+      }
+    }
+
+    .prop-delete {
+      display: inline-block;
+      position: absolute;
+      font-size: 16px;
+      height: 16px;
+      line-height: 16px;
+      color: #c70000;
+      right: 3px;
+      bottom: 3px;
+      background-color: #cccccc;
+
+      &:hover {
+        color: #ff4b4b;
+      }
+    }
+    .prop-item {
+      padding: 2px 0;
+      border-bottom: none;
+
+      input[type="text"],input[type="password"],textarea, select {
+        background-color: #d1d1d1;
+        color: #333333;
+
+        &:hover , &:active {
+          background-color: #fff;
+          color: #000;
+        }
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+    }
+
+    &:hover {
+      background-color: #383f50;
+    }
+  }
+  
+}
+.prop-list-dragger {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  margin-top: -18px;
+  cursor: move;
+  z-index: 1;
+  width: 45px;
+  height: 45px;
+  background-image: url(../images/dragger-bg.svg);
+  background-position: center;
+  background-size: 45px;
+  background-repeat: no-repeat;
+
+  i {
+    position: absolute;
+    top: 50%;
+    margin-top: -7px;
+    left: 5px;
+    width: 18px;
+    height: 18px;
+    font-size: 15px;
+  }
+}

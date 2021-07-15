@@ -1,7 +1,7 @@
 <template>
   <div v-if="viewPort" 
     class="blueprint-continer editor-drag-area" 
-    :style="{ transform: `scaleX(${viewPort.scale}) translate(${-viewPort.position.x}px, ${-viewPort.position.y}px)` }"
+    :style="{ transform: `scaleX(${viewPort.scale}) scaleY(${viewPort.scale}) translate(${-viewPort.position.x}px, ${-viewPort.position.y}px)` }"
     @contextmenu="onContextMenu($event)"
   >
     <slot />

@@ -45,6 +45,18 @@ export class BluePrintParamType extends SaveableObject {
   public static Execute() : BluePrintParamType  {
     return new BluePrintParamType('execute');
   }
+  /**
+   * 获取静态execute类型
+   */
+  public static FromString(str : string) : BluePrintParamType  {
+    const arg = str.split(':');
+    return new BluePrintParamType(
+      arg.length >= 1 ? arg[0] as BluePrintParamBaseType : 'any',
+      arg.length >= 2 ? arg[1] : 'any',
+      arg.length >= 3 ? arg[2] as BluePrintParamSetType : 'variable',
+      arg.length >= 4 && arg[3] != 'null' ? BluePrintParamType.FromString(arg[3]) : undefined,
+    );
+  }
 
   /**
    * 类型的基础类型
@@ -63,10 +75,10 @@ export class BluePrintParamType extends SaveableObject {
    */
   public dictionaryKeyType: BluePrintParamType|null = null;
 
-  public constructor(baseType: BluePrintParamBaseType | BluePrintParamType, customType = "", setType : BluePrintParamSetType = 'variable') {
+  public constructor(baseType: BluePrintParamBaseType, customType = "", setType : BluePrintParamSetType = 'variable', dictionaryKeyType ?: BluePrintParamType) {
     super();
     this.saveClassName = 'BluePrintParamType';
-    this.set(baseType, customType, setType);
+    this.set(baseType, customType, setType, dictionaryKeyType);
   }
 
   /**
@@ -74,33 +86,54 @@ export class BluePrintParamType extends SaveableObject {
    * @param baseType 基础类型
    * @param customType 自定义类型
    */
-  public set(baseType: string | BluePrintParamType, customType = "", setType : BluePrintParamSetType = 'variable') : void {
+  public set(baseType: string, customType = "", setType : BluePrintParamSetType = 'variable', dictionaryKeyType ?: BluePrintParamType) : void {
     if (typeof baseType == "undefined") {
       this.baseType = "any";
       this.customType = "";
       return;
     }
-    if (typeof baseType == "string") {
-      if (StringUtils.isNullOrEmpty(customType)) {
-        this.baseType = ParamTypeService.getBaseTypeForCustomType(baseType);
-        this.customType = baseType;
-      } else {
-        this.baseType = <BluePrintParamBaseType>baseType;
-        this.customType = customType;
-      }
+    if (StringUtils.isNullOrEmpty(customType)) {
+      this.baseType = ParamTypeService.getBaseTypeForCustomType(baseType);
+      this.customType = baseType;
     } else {
-      this.baseType = baseType.baseType;
-      this.customType = baseType.customType;
+      this.baseType = <BluePrintParamBaseType>baseType;
+      this.customType = customType;
     }
-
     this.setType = setType;
+
+    if(typeof dictionaryKeyType === 'object')
+      this.dictionaryKeyType = dictionaryKeyType;
   }
 
   /**
    * 获取当前类型的字符串表示方式
    */
-  public getType() : string {
-    return this.isCustom() ? this.customType : this.baseType;
+  public toString() : string {
+    return `${this.baseType}:${this.customType}:${this.setType}:${this.dictionaryKeyType}`;
+  }
+
+  /**
+   * 获取类型名称
+   * @returns 
+   */
+  public getTypeName() : string { return this.isCustom() ? this.customType : this.baseType; }
+  /**
+   * 仅设置当前的类型名称为另外一个的值
+   * @param type 
+   */
+  public setTypeName(type: BluePrintParamType) : void { 
+    this.baseType = type.baseType;
+    this.customType = type.customType;
+  }
+  /**
+   * 设置当前所有对象值为另外一个的值
+   * @param type 
+   */
+   public setAll(type: BluePrintParamType) : void { 
+    this.baseType = type.baseType;
+    this.customType = type.customType;
+    this.setType = type.setType;
+    this.dictionaryKeyType = type.dictionaryKeyType;
   }
 
   /**
@@ -109,16 +142,23 @@ export class BluePrintParamType extends SaveableObject {
    */
   public getNameString() : string {
     let str = '';
-    const typeName = ParamTypeService.getTypeNameString(this.getType()) || '';
+    const typeName = ParamTypeService.getTypeNameString(this.getTypeName()) || '';
     if(this.setType == 'dictionary')
-      str = '<i>' + (this.dictionaryKeyType ? ParamTypeService.getTypeNameString(this.dictionaryKeyType.getType()) : '未知') + '</i>到<i>' + typeName + '</i><b>的映射</b>';
+      str = '<i>' + (this.dictionaryKeyType ? ParamTypeService.getTypeNameString(this.dictionaryKeyType.getTypeName()) : '未知') + '</i> 到 <i>' + typeName + '</i> 的 <i class="iconfont icon-port-dictionary-full ml-1 mr-1"></i><b>映射</b>';
     else if(this.setType == 'array')
-      str = typeName + '<b>数组</b>';
+      str = typeName + '<i class="iconfont icon-port-array ml-1 mr-1""></i><b>数组</b>';
     else if(this.setType == 'set')
-      str = typeName + '<b>集</b>';
+      str = typeName + '<i class="iconfont icon-port-set ml-1 mr-1""></i><b>集</b>';
     else 
       str = typeName;
     return str;
+  }
+  /**
+   * 获取类型对用户友好的字符串（仅基础类型名称）
+   * @returns 
+   */
+   public getTypeNameString() : string {
+    return ParamTypeService.getTypeNameString(this.getTypeName()) || '';
   }
 
   /**
@@ -126,7 +166,7 @@ export class BluePrintParamType extends SaveableObject {
    * @returns 
    */
   public getTypeColor() : string {
-    return ParamTypeService.getTypeColor(this.getType()) || '';
+    return ParamTypeService.getTypeColor(this.getTypeName()) || '';
   }
 
   /**
@@ -165,7 +205,7 @@ export class BluePrintParamType extends SaveableObject {
   public equals(otherType: BluePrintParamType | string, compareSetType = true) : boolean {
     if (otherType == null) return false;
     if (otherType == this) return true;
-    if (typeof otherType == "string") return otherType == this.getType();
+    if (typeof otherType == "string") return otherType == this.getTypeName();
     return (
       this.baseType == otherType.baseType &&
       (!compareSetType || this.setType == otherType.setType) &&
@@ -199,10 +239,12 @@ export class BluePrintParamTypeDefine {
   public constructor(
     name: string,
     prototypeName: string,
+    nameForUser: string,
     color?: string,
     editor?: BluePrintParamEditorDefine
   ) {
     this.name = name;
+    this.nameString = nameForUser;
     this.prototypeName = prototypeName;
     if (typeof editor != "undefined") this.editor = editor;
     if (typeof color != "undefined") this.color = color;
@@ -272,11 +314,12 @@ export class BluePrintParamEnumDefine extends BluePrintParamTypeDefine {
    */
   public constructor(
     name: string,
+    nameForUser: string,
     allowTypes?: Array<BluePrintParamEnumValueDefine> | Array<string>,
     color?: string,
     editor?: BluePrintParamEditorDefine
   ) {
-    super(name, "enum", color, editor);
+    super(name, "enum", nameForUser, color, editor);
 
     if (typeof allowTypes != "undefined" && allowTypes.length > 0) {
       allowTypes.forEach((element : BluePrintParamEnumValueDefine|string) => {
@@ -320,10 +363,6 @@ export class BluePrintParamTypeConverterDefine {
    * 目标类型
    */
   public toType: BluePrintParamType = BluePrintParamType.Any();
-  /**
-   * 转换所支持的集合类型
-   */
-  public allowSetType: BluePrintParamSetType = "variable";
   /**
    * 转换器
    */

@@ -23,7 +23,7 @@ export default defineComponent({
         case 'nameComponent':
           childs.push(
             h(
-              resolveComponent((ret.ret as string)),
+              resolveComponent(ret.ret as string) as string,
               { block: this.$props.block }
             )
           )
@@ -31,7 +31,7 @@ export default defineComponent({
         case 'nameComponents': 
           (ret.ret as string[]).forEach((v) => childs.push(
             h(
-              resolveComponent(v),
+              resolveComponent(v) as string,
               { block: this.$props.block }
             )
           ));

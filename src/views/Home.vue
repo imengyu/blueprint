@@ -1,17 +1,15 @@
 <template>
   <div class="home">
-    <BluePrintEditor />
+    Hello
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import BluePrintEditor from '@/components/BluePrintEditor.vue'; // @ is an alias to /src
 
 export default defineComponent({
   name: 'Home',
   components: {
-    BluePrintEditor,
   },
 });
 </script>

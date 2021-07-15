@@ -1,3 +1,5 @@
+@import "./root.scss";
+
 .flow-block {
   display: inline-block;
   position: absolute;
@@ -14,7 +16,7 @@
   color: #fff;
 
   &.selected {
-    border: 3px solid rgb(231, 157, 0);
+    border: 3px solid $block-active-color;
   }
 
   &.actived {
@@ -34,6 +36,57 @@
       display: inline-block;
     }
   }
+
+  &.round {
+    border-radius: 30px;
+  }
+
+  
+  .background {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-size: 55px;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .big-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+  }
+  .breakpoint-status {
+    position: absolute;
+    display: inline-block;
+    line-height: 32px;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    left: -16px;
+    top: -16px;
+    color: #cf1010;
+    text-shadow: 0 0 10px #af0000;
+    z-index: 3;
+  }
+  .breakpoint-arrow {
+    display: inline-block;
+    position: absolute;
+    color: rgba(214, 59, 0, 0.72);
+    text-shadow: 0px 0px 10px #9e3300;
+    font-size: 50px;
+    top: -50px;
+    left: calc(50% - 20px);
+    z-index: 2;
+  }
+
 }
 
 .flow-header {
@@ -101,6 +154,7 @@
     bottom: -5px;
     user-select: none;
   }
+
 }
 
 .flow-block-custom-editor {
@@ -224,8 +278,8 @@
         width: 12px;
         overflow: hidden;
 
-        .port-dot {
-          transform: translateX(-100%);
+        .port {
+          transform: translateX(-60%);
         }
       }
     }

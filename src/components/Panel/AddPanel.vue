@@ -27,16 +27,14 @@
         <i :class="'collapse-arrow iconfont ' + (item.open ? 'icon-arrow-down-1' : 'icon-arrow-right-')"></i>
         {{ item.category }}
       </span>
-      <BlockListCategory v-show="item.open" :categoryData="item" :isAddDirectly="isAddDirectly"
-        @on-block-item-click="onBlockItemClick">
+      <BlockListCategory v-show="item.open" :categoryData="item" :isAddDirectly="isAddDirectly">
       </BlockListCategory>
     </div>
 
-    <BlockListCategory v-if="blocksGroupedMostOut" :categoryData="blocksGroupedMostOut" :isAddDirectly="isAddDirectly"
-      @on-block-item-click="onBlockItemClick">
+    <BlockListCategory v-if="blocksGroupedMostOut" :categoryData="blocksGroupedMostOut" :isAddDirectly="isAddDirectly">
     </BlockListCategory>
 
-    <div v-if="currentShowCount==0 && searchValue != ''" class="text-center">暂无结果</div>
+    <div v-if="currentShowCount===0 && currentFilterCount===0" class="text-center mt-5 mb-5">暂无筛选结果。请更改筛选条件后再试</div>
 
   </div>
 </template>
@@ -44,8 +42,8 @@
 <script lang="ts">
 import { CategoryData } from '@/model/Services/BlockRegisterService'
 import { Vector2 } from '@/model/Base/Vector2'
-import { BluePrintFlowBlock, BluePrintFlowBlockDefine } from '@/model/Flow/BluePrintFlowBlock'
-import { BluePrintFlowPort, BluePrintFlowPortDirection } from '@/model/Flow/BluePrintFlowPort'
+import { BluePrintFlowBlockDefine } from '@/model/Flow/BluePrintFlowBlock'
+import { BluePrintFlowPortDirection } from '@/model/Flow/BluePrintFlowPort'
 import { BluePrintParamType } from '@/model/Flow/BluePrintParamType'
 import { defineComponent, PropType } from 'vue'
 import BlockListCategory from './BlockListCategory.vue'
@@ -53,7 +51,7 @@ import BlockListCategory from './BlockListCategory.vue'
 export default defineComponent({
   components: { BlockListCategory },
   name: 'AddPanel',
-  emits: [ 'on-block-item-click', 'on-close', ],
+  emits: [ 'addBlock', 'close', ],
   props: {
     allBlocksGrouped: {
       type: Object as PropType<Array<CategoryData>>,  
@@ -70,10 +68,6 @@ export default defineComponent({
     isAddDirectly: {
       type: Boolean,
       default: false,
-    },
-    filterSrcPort: {
-      type: Object as PropType<BluePrintFlowPort>,  
-      default: null,
     },
     filterByPortDirection: {
       type: String as PropType<BluePrintFlowPortDirection>,  
@@ -107,6 +101,7 @@ export default defineComponent({
     show(newV: boolean) {
       if(newV) { setTimeout(() => {
         document.addEventListener('click', this.onDocClick);
+        this.doFilter();
       }, 100); } 
       else document.removeEventListener('click', this.onDocClick);
     },
@@ -114,6 +109,13 @@ export default defineComponent({
       if(newV == '') this.clearSearch();
       else this.doSearch();
     },
+  },
+  provide() {
+    return {
+      addBlock: (block : BluePrintFlowBlockDefine) => {
+        this.$emit('addBlock', block)
+      }
+    }
   },
   methods: {
     loadMostOutBlocks() {
@@ -131,7 +133,7 @@ export default defineComponent({
     },
     doFilterLoop(cn : (b : BluePrintFlowBlockDefine) => boolean) {
       this.currentFilterCount = 0;
-      let loop = function(data : CategoryData) {
+      let loop = (data : CategoryData) => {
         let showChildCount = 0;
         data.blocks.forEach((b) => {
           b.show = cn(b.define);
@@ -182,16 +184,18 @@ export default defineComponent({
     doFilter() {
       if(this.filterByPortType != null) {
         this.doFilterLoop((b) => this.hasOnePortByDirectionAndType(b, this.filterByPortDirection, this.filterByPortType, true));
-        this.filterText = (this.filterByPortDirection == 'input' ? '获取 ' : '输出 ') + this.filterSrcPort.define.type.getNameString() + ' 的单元';
+        this.filterText = (this.filterByPortDirection == 'input' ? '获取 ' : '输出 ') + this.filterByPortType.getNameString() + ' 的单元';
       }
       else this.clearFilter();
     },
     clearFilter() {
+      this.currentFilterCount = 0;
 
-      let loop = function(data : CategoryData) {
+      let loop = (data : CategoryData) => {
         data.show = true;
         data.blocks.forEach((b) => b.show = true);
         data.childCategories.forEach((d) => loop(d));
+        this.currentFilterCount++;
       };
 
       this.allBlocksGrouped.forEach((cd) => loop(cd));
@@ -227,16 +231,12 @@ export default defineComponent({
     },
 
     onDocClick() {
-      this.$emit('on-close');
+      this.$emit('close');
       document.removeEventListener('click', this.onDocClick);
     },
     onClick(e : MouseEvent) {
       e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
     },
-    onBlockItemClick(block : BluePrintFlowBlock) {
-      this.$emit('on-block-item-click', block)
-    }
-
   }
 })
 </script>

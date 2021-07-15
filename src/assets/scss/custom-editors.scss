@@ -39,24 +39,25 @@
     position: relative;
     background: transparent;
     appearance: none;
-    height: 18px;
-    width: 18px;
+    height: 20px;
+    width: 20px;
     overflow: hidden;
+    border: 2px solid transparent;
+    border-radius: 6px;
 
     &:after {
       display: inline-block;
       width: 18px;
-      height: 18px;
-      top: 0px;
+      height: 15px;
       content: "";
       background-color: #292929;
+      padding-top: 2px;
       color: #ffffff;
-      border-radius: 6px;
-      border: none;
       text-align: center;
       font-size: 12px;
       font-weight: bold;
       font-family: 'iconfont';
+      border: none;
 
       &:hover {
         background-color:#777777;
@@ -76,11 +77,19 @@
     &:checked:after {
       content: "\e852";
     }
+
+    &:active {
+      outline: none;
+    }
+    &:focus {
+      outline: none;
+      border-color: $block-active-color;
+    }
   }
 
 }
 .comment-editor {
-  background-color: rgba(255, 255, 255, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
 
   &:hover, &:active {
     background-color: #fff!important;

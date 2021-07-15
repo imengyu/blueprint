@@ -18,17 +18,17 @@ export class EventHandler<T extends Function> {
   }
   public removeListener(callback : T|number) {
     if(typeof callback == 'number') {
-      this.listener.remove(callback);
+      this.listener.removeIndex(callback);
     } else for(let i = this.listener.length - 1; i >= 0; i--)
       if(this.listener[i].callback == callback) {
-        this.listener.remove(i);
+        this.listener.removeIndex(i);
         break;
       }
   }
   public hasListener(callback : T) {
     for(let i = this.listener.length - 1; i >= 0; i--)
       if(this.listener[i].callback == callback) {
-        this.listener.remove(i);
+        this.listener.removeIndex(i);
         return false;
       }
     return true;

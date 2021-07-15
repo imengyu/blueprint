@@ -17,7 +17,7 @@
         {{ item.nameString }}
       </div>
       <div class="item" v-for="(item, index) in allCustomTypes" :key="'C'+index" @click="onItemClick(item)" v-show="searchValue==''||item.name.contains(searchValue)">
-        <i :class="'iconfont ' + (item.prototypeName == 'enum' ? 'icon-tx-fill-babianxing' : 'icon-search2')" :style="{ marginRight: '5px', color: item.color }"></i>
+        <i :class="'iconfont ' + (item.prototypeName == 'enum' ? 'icon-layers' : 'icon-sphere')" :style="{ marginRight: '5px', color: item.color }"></i>
         {{ item.nameString }}
       </div>
     </div>
@@ -43,7 +43,7 @@ interface CustomTypeData {
 
 export default defineComponent({
   name: 'ChooseTypePanel',
-  emits: [ 'on-item-click', 'on-close' ],
+  emits: [ 'itemClick', 'close' ],
   props: {
     showPos: {
       type: Object as PropType<Vector2>,
@@ -69,14 +69,14 @@ export default defineComponent({
     const { show, canBeExecute, canBeAny  } = toRefs(props);
 
     function onDocClick() {
-      context.emit('on-close');
+      context.emit('close');
       document.removeEventListener('click', onDocClick);
     }
     function onClick(e : MouseEvent) {
       e.stopPropagation ? e.stopPropagation() : e.cancelBubble = true;
     }
     function onItemClick(item : CustomTypeData) {
-      context.emit('on-item-click', item.type, item.isBaseType)
+      context.emit('itemClick', item.type, item.isBaseType)
     }
 
     watch(show, (newV : boolean) => {
@@ -112,7 +112,7 @@ export default defineComponent({
       const map = ParamTypeService.getAllCustomTypes();
 
       if(act == 'full') {
-        _allCustomTypes.empty();
+        _allCustomTypes.clear();
         map.forEach((value) => {
           _allCustomTypes.push({
             nameString: StringUtils.isNullOrEmpty(value.nameString) ? value.name : value.nameString,
@@ -127,7 +127,7 @@ export default defineComponent({
       else if(act == 'remove') {
         for(let i = _allCustomTypes.length - 1; i >= 0; i--) {
           if(_allCustomTypes[i].name == typeName) {
-            _allCustomTypes.remove(i);
+            _allCustomTypes.removeIndex(i);
             break;
           }
         }

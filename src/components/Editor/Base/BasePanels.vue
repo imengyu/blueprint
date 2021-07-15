@@ -1,6 +1,7 @@
 <template>
   <!--单元连接弹出提示-->
   <div class="tooltip"
+    v-if="connectingInfo"
     v-show="connectingInfo.isConnecting && !connectingInfo.isConnectingToNew"
     :style="{ left: (connectingInfo.endPos.x - viewPort.position.x + 10) + 'px', top:  (connectingInfo.endPos.y - viewPort.position.y + 10) + 'px' }">
     <span v-if="connectingInfo.currentHoverPort==null"><i class="iconfont icon-calendar-1 mr-1"></i>连接至新的单元</span>
@@ -24,8 +25,8 @@
     :isAddDirectly="false"
     :filterByPortDirection="addBlockPanel.filterByPortDirection"
     :filterByPortType="addBlockPanel.filterByPortType"
-    @on-block-item-click="onBlockAddItemClick"
-    @on-close="addBlockPanelShow = false" />
+    @addBlock="onBlockAddItemClick"
+    @close="addBlockPanelShow = false" />
   <!--添加单元选择类型弹出窗口-->
   <choose-type-panel 
     ref="instanceChooseTypePanel"
@@ -34,23 +35,23 @@
     :showPos="chooseTypePanel.pos"
     :canBeAny="chooseTypePanel.canBeAny"
     :canBeExecute="chooseTypePanel.canBeExecute"
-    @on-close="chooseTypePanel.show=false"
-    @on-item-click="onTypeItemClick"
+    @close="chooseTypePanel.show=false"
+    @itemClick="onTypeItemClick"
   />
 </template>
 
 <script lang="ts">
-import { IConnectingInfo } from '@/components/BluePrintEditor.vue';
 import { Vector2 } from '@/model/Base/Vector2';
-import { ChooseTypePanelCallback } from '@/model/BluePrintEditor';
+import { BluePrintEditorInstance, ChooseTypePanelCallback, IConnectingInfo } from '@/model/BluePrintEditor';
 import { BluePrintEditorViewport } from '@/model/BluePrintEditorBase';
 import { BluePrintFlowBlockDefine } from '@/model/Flow/BluePrintFlowBlock';
 import { BluePrintFlowPortDirection } from '@/model/Flow/BluePrintFlowPort';
 import { BluePrintParamType } from '@/model/Flow/BluePrintParamType';
-import { defineComponent, PropType, reactive, ref, toRefs, watch } from 'vue'
+import { defineComponent, PropType, reactive, ref, toRefs } from 'vue'
 import BlockRegisterService, { CategoryData } from '@/model/Services/BlockRegisterService';
 import AddPanel from '@/components/Panel/AddPanel.vue';
 import ChooseTypePanel from '@/components/Panel/ChooseTypePanel.vue';
+import { useChooseTypeControl } from '@/components/IDE/Common/ChooseTypeControl';
 
 export interface IBasePanels {
   /**
@@ -101,66 +102,31 @@ export default defineComponent({
       type: Object as PropType<IConnectingInfo>,
       default: null
     },
+    editor: {
+      type: Object as PropType<BluePrintEditorInstance>,
+      default: null
+    },
     viewPort: {
       type: Object as PropType<BluePrintEditorViewport>,
       default: null
     }
   },
-  emits: [ 
-    'on-user-add-block',
-    'on-end-connect-to-new',
-    'update-add-block-in-pos',
-  ],
-  setup(props, context) {
+  setup(props) {
 
-    const { viewPort, connectingInfo } = toRefs(props);
+    const { viewPort, editor, connectingInfo } = toRefs(props);
 
-    const instanceChooseTypePanel = ref();
+    const _editor = (editor.value as BluePrintEditorInstance);
+    
     const instanceAddBlockPanel = ref();
 
-    const chooseTypePanel = reactive({
-      show: false,
-      pos: new Vector2(),
-      canBeAny: false,
-      canBeExecute: false,
-      maxHeight: 400,
-      callback: (() => {/*TT */}) as ChooseTypePanelCallback,
-    });
-
-    function onTypeItemClick(type : BluePrintParamType, isBaseType : boolean) {
-      if (typeof chooseTypePanel.callback == "function") {
-        chooseTypePanel.show = false;
-        chooseTypePanel.callback(type, isBaseType);
-      }
-    }
-
-    /**
-     * 显示选择类型菜单
-     */
-    function showChooseTypePanel(screenPos: Vector2, canbeExecute: boolean, canbeAny: boolean, callback: ChooseTypePanelCallback) {
-      chooseTypePanel.pos.set(screenPos);
-      chooseTypePanel.show = true;
-      chooseTypePanel.canBeAny = canbeAny;
-      chooseTypePanel.canBeExecute = canbeExecute;
-      chooseTypePanel.callback = callback;
-      chooseTypePanel.maxHeight = viewPort.value.size.y - screenPos.y;
-
-      if (screenPos.x + 300 > window.innerWidth)
-        chooseTypePanel.pos.x -= chooseTypePanel.pos.x + 300 - window.innerWidth;
-      if (chooseTypePanel.maxHeight > 500) chooseTypePanel.maxHeight = 500;
-      else if (chooseTypePanel.maxHeight < 222) {
-        chooseTypePanel.pos.y -= 222 - chooseTypePanel.maxHeight;
-        chooseTypePanel.maxHeight = 222;
-      }
-      instanceChooseTypePanel.value.focus();
-    }
-    /**
-     * 关闭选择类型菜单
-     */
-    function closeChooseTypePanel() {
-      chooseTypePanel.show = false;
-    }
-
+    const { 
+      instanceChooseTypePanel,
+      chooseTypePanel,
+      onTypeItemClick,
+      showChooseTypePanel,
+      closeChooseTypePanel 
+    } = useChooseTypeControl(viewPort.value);
+   
     const addBlockPanelShow = ref(false);
     const addBlockPanel = reactive({
       pos: new Vector2(),
@@ -174,13 +140,10 @@ export default defineComponent({
 
     function onBlockAddItemClick(blockDefine : BluePrintFlowBlockDefine) {
       addBlockPanelShow.value = false;
-      context.emit('on-user-add-block', blockDefine);
+      const block = _editor.userAddBlock(blockDefine) || undefined;
+      if(connectingInfo.value.isConnectingToNew)
+        _editor.endConnectToNew(block);
     }
-
-    watch(addBlockPanelShow, (newValue : boolean) => {
-      if(!newValue && connectingInfo.value.isConnectingToNew) 
-        context.emit('on-end-connect-to-new');
-    });
 
     /**
      * 关闭添加单元菜单
@@ -199,9 +162,9 @@ export default defineComponent({
       addBlockPanel.filterByPortDirection = filterByPortDirection || null;
       addBlockPanelShow.value = true;
       if(addBlockPos)
-        context.emit('update-add-block-in-pos', true, addBlockPos);
+        _editor.setAddBlockInpos(addBlockPos);
       else
-        context.emit('update-add-block-in-pos', false);
+        _editor.setNoAddBlockInpos()
       instanceAddBlockPanel.value.focus();
     }
 

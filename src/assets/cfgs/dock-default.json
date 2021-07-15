@@ -1,0 +1,57 @@
+{
+  "size": 0,
+  "grids": [
+    {
+      "size": 80,
+      "grids": [
+        {
+          "size": 64,
+          "grids": [],
+          "panels": [],
+          "name": "areaMain",
+          "noPanelViewSlotName": "mainEmptyView",
+          "alwaysVisible": true,
+          "acceptPanelTags": [
+            "doc"
+          ]
+        },
+        {
+          "size": 36,
+          "grids": [],
+          "panels": [],
+          "name": "areaMainBottom",
+          "alwaysVisible": false,
+          "acceptPanelTags": [
+            "console",
+            "search",
+            "prop"
+          ]
+        }
+      ],
+      "panels": [],  
+      "name": "areaMainOuter",
+      "alwaysVisible": true
+    },
+    {
+      "size": 20,
+      "grids": [],
+      "panels": [
+        {
+          "key": "Props"
+        },
+        {
+          "key": "DocProps"
+        }
+      ],
+      "name": "areaRight",
+      "alwaysVisible": false,
+      "acceptPanelTags": [
+        "search",
+        "prop"
+      ]
+    }
+  ],
+  "panels": [],
+  "currentDirection": "horizontal",
+  "alwaysVisible": true
+}

@@ -4,22 +4,19 @@
 
 <script lang="ts">
 import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
-import { BluePrintEditorViewport } from '../model/BluePrintEditorBase'
-import { BluePrintFlowConnector } from '../model/Flow/BluePrintFlowConnector'
-import { Rect } from '../model/Base/Rect'
+import { BluePrintEditorViewport } from '@/model/BluePrintEditorBase'
+import { BluePrintFlowConnector } from '@/model/Flow/BluePrintFlowConnector'
+import { Rect } from '@/model/Base/Rect'
 import { ChunkedPanel } from '@/model/Cast/ChunkedPanel';
-import { IConnectingInfo } from './BluePrintEditor.vue';
 import { ConnectorDrawer } from '@/model/Utils/ConnectorDrawer';
-
-export interface IBluePrintRenderer {
-  onWindowSizeChanged() : void;
-}
+import { IConnectingInfo } from '@/model/BluePrintEditor';
 
 export default defineComponent({
   name: 'BluePrintRenderer',
   props: {
     viewPort: {
       type: Object as PropType<BluePrintEditorViewport>,
+      required: true,
       default: null,
     },
     renderEnabled: {
@@ -99,16 +96,17 @@ export default defineComponent({
       if(ctx == null) return;
 
       const _connectingInfo = connectingInfo.value;
+      const _startPort = _connectingInfo.startPort;
       const _viewPort = viewPort.value;
-      if(_connectingInfo.isConnecting && _connectingInfo.startPort && !_connectingInfo.isSamePort) {
-        const startPos = _connectingInfo.startPort.getPortPositionViewport();
-        const endPos = _connectingInfo.endPos;
+      if(_connectingInfo.isConnecting && _startPort && !_connectingInfo.isSamePort) {
+        const startPos = _startPort.direction === 'output' ? _startPort.getPortPositionViewport() : _connectingInfo.endPos;
+        const endPos = _startPort.direction === 'output' ? _connectingInfo.endPos : _startPort.getPortPositionViewport();
         const scale = _viewPort.scale;
         const x1 = startPos.x * scale, x2 = endPos.x * scale, 
           y1 = startPos.y * scale, y2 = endPos.y * scale;
 
         ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#d71345';
+        ctx.strokeStyle = '#efefef';
         ctx.fillStyle = ctx.strokeStyle;
 
         drawerConnectingConnector.drawConnectorBezierCurve(ctx, x1, y1, x2, y2, _viewPort, true, -1, false);

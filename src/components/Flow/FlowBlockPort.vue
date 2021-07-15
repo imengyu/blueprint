@@ -11,6 +11,7 @@
     >
       <div class="editor" v-if="instance.direction === 'output' && instance.define.forceEditorControlOutput" >
         <port-custom-editor-wrapper 
+          v-show="editorVisible"
           :port="instance"
           :createEditorFunction="customEditorFunction" 
           :createTypeEditorFunction="editor && editor.editorCreate ? editor.editorCreate : null" 
@@ -43,6 +44,7 @@
       </div>
       <div class="editor" v-if="instance.direction === 'input'" >
         <port-custom-editor-wrapper 
+          v-show="editorVisible"
           :port="instance"
           :createEditorFunction="customEditorFunction" 
           :createTypeEditorFunction="editor && editor.editorCreate ? editor.editorCreate : null" 
@@ -56,13 +58,12 @@
     <template #content>
       <h5>{{ (instance.define.name === '') ? (instance.define.direction == 'input' ? '入口' : '出口') : instance.define.name }}</h5>
       <span class="text-secondary">
-        <small>{{ instance.define.description }}</small>
+        <small v-html="instance.define.description"></small>
       </span>
-      <span><br>类型：<b>{{ instance.define.type.getNameString() }}</b></span>
+      <span><br>类型：<span v-html="instance.define.type.getNameString()"></span></span>
       <span v-if="instance.define.isAsync">
         <br>
-        <img v-show="instance.define.isAsync" class="mr-1" style="width: 14px;" src="@/assets/images/Icon/async.svg" />
-        该端口执行是异步调用的
+        <i class="mr-1 iconfont icon-shuffle"></i>该端口执行是异步调用的
       </span>
     </template>
   </tooltip>
@@ -70,9 +71,8 @@
 
 <script lang="ts">
 import { VoidDelegate } from '@/model/Base/EventHandler';
-import ParamTypeService from '@/model/Services/ParamTypeService';
 import { Vector2 } from '@/model/Base/Vector2';
-import { BluePrintEditorInfo } from '@/model/BluePrintEditor';
+import { BluePrintEditorInstance } from '@/model/BluePrintEditor';
 import { BluePrintFlowPort, BluePrintFlowPortCreateEditorFunction } from '@/model/Flow/BluePrintFlowPort';
 import HtmlUtils from '@/model/Utils/HtmlUtils';
 import { defineComponent, PropType } from 'vue'
@@ -95,23 +95,25 @@ export default defineComponent({
     portIcon() : string {
       if(this.instance.define.type.isExecute()) 
         return this.instance.state === 'active' ? 'icon-port-exe-active' : 'icon-port-exe';
+      else if(this.instance.define.type.setType === 'array') 
+        return this.instance.state === 'active' ? 'icon-port-array-full' : 'icon-port-array';
       return this.instance.state === 'active' ? 'icon-port-active' : 'icon-port';
     },
     portColor() : string {
       if(this.instance.define.type.isDictionary()) 
         return 'rgb(250, 250, 250)';
-      return ParamTypeService.getTypeColor(this.instance.define.type.getType()) || 'rgb(250, 250, 250)';
+      return this.instance.define.type.getTypeColor() || 'rgb(250, 250, 250)';
     },
     portDLeftColor() : string {
       if(this.instance.define.type.isDictionary()) {
         const dtype = this.instance.define.type.dictionaryKeyType;
-        return (dtype ? ParamTypeService.getTypeColor(dtype.getType()) : undefined) || 'rgb(250, 250, 250)';
+        return (dtype ? dtype.getTypeColor() : undefined) || 'rgb(250, 250, 250)';
       }
       return '';
     },
     portDRightColor() : string {
       if(this.instance.define.type.isDictionary()) 
-        return ParamTypeService.getTypeColor(this.instance.define.type.getType()) || 'rgb(250, 250, 250)';
+        return this.instance.define.type.getTypeColor() || 'rgb(250, 250, 250)';
       return '';
     },
   },
@@ -124,6 +126,7 @@ export default defineComponent({
       dotPos: new Vector2(),
       editor: null as BluePrintParamEditorDefine|null,
       editorCanUse: false,
+      editorVisible: true,
       customEditorFunction: null as BluePrintFlowPortCreateEditorFunction|null,
     }
   },
@@ -132,10 +135,10 @@ export default defineComponent({
     this.fnOnPortMouseMove = this.onPortMouseMove.bind(this);
     const instance = this.instance;
     instance.getPortPositionRelative = this.getPortPosition.bind(this);
-    instance.updateEditor = this.updateTypeEditorInfo.bind(this);
+    instance.updateEditor = this.updateTypeEditor.bind(this);
 
     this.customEditorFunction = instance.parent.define.events.onCreatePortCustomEditor || null;
-    this.updateTypeEditorInfo()
+    this.updateTypeEditor()
   },
   methods: {
 
@@ -143,34 +146,34 @@ export default defineComponent({
     onPortMouseEnter() {
       if(!this.mouseEnter) {
         this.mouseEnter = true;
-        (this.instance.parent.editorInfo as BluePrintEditorInfo).updateCurrentHoverPort(this.instance as BluePrintFlowPort, true); 
+        (this.instance.parent.editor as BluePrintEditorInstance).updateCurrentHoverPort(this.instance as BluePrintFlowPort, true); 
       } 
     },
     onPortMouseLeave() {
       if(this.mouseEnter) {
         this.mouseEnter = false;
-        (this.instance.parent.editorInfo as BluePrintEditorInfo).updateCurrentHoverPort(this.instance as BluePrintFlowPort, false); 
+        (this.instance.parent.editor as BluePrintEditorInstance).updateCurrentHoverPort(this.instance as BluePrintFlowPort, false); 
       }
     },
     onPortMouseMove(e : MouseEvent) {
       if(e.button == 0) {
         const parent = this.instance.parent;
-        const editorInfo = parent.editorInfo as BluePrintEditorInfo;
+        const editor = parent.editor as BluePrintEditorInstance;
         parent.mouseConnectingPort = true;
-        editorInfo.updateConnectEnd(new Vector2(e.x, e.y));
+        editor.updateConnectEnd(new Vector2(e.x, e.y));
       }
       return true;
     },
     onPortMouseDown(e : MouseEvent) {
       if(!this.testIsDownInControl(e)) {
         const parent = this.instance.parent;
-        const editorInfo = parent.editorInfo as BluePrintEditorInfo;
+        const editor = parent.editor as BluePrintEditorInstance;
         
         parent.mouseDownInPort = true;
         parent.mouseConnectingPort = false;
         if(e.button == 0) {
-          editorInfo.startConnect(this.instance);
-          editorInfo.updateConnectEnd(new Vector2(e.x, e.y));
+          editor.startConnect(this.instance);
+          editor.updateConnectEnd(new Vector2(e.x, e.y));
         }
 
         if(this.fnOnPortMouseUp)
@@ -185,7 +188,7 @@ export default defineComponent({
       const parent = this.instance.parent;
       parent.mouseDownInPort = false;
       parent.mouseConnectingPort = false;
-      (parent.editorInfo as BluePrintEditorInfo).endConnect(this.instance);
+      (parent.editor as BluePrintEditorInstance).endConnect(this.instance);
       
       if(this.fnOnPortMouseUp)
         document.removeEventListener('mouseup', this.fnOnPortMouseUp);
@@ -195,7 +198,7 @@ export default defineComponent({
     onContextMenu(e : MouseEvent) {
       e.stopPropagation();
       e.preventDefault();
-      //(<BlockEditor>this.parent).editor.showPortRightMenu(this, new Vector2(e.x, e.y));
+      this.instance.parent.editor?.showPortRightMenu(this.instance, new Vector2(e.x, e.y));
       return false;
     },  
     testIsDownInControl(e : MouseEvent) {
@@ -215,9 +218,14 @@ export default defineComponent({
       const dot = (this.$refs.portDot as HTMLElement);
       this.dotPos.set(
         HtmlUtils.getLeft(dot, 'flow-block') + dot.offsetWidth / 2,  
-        HtmlUtils.getTop(dot, 'flow-block') + dot.offsetHeight / 2 + 4
+        HtmlUtils.getTop(dot, 'flow-block') + dot.offsetHeight / 2 + 2
       );
       return this.dotPos;
+    },
+    updateTypeEditor() {
+      this.editor = this.instance.getTypeEditor();
+      this.editorVisible = !this.instance.isConnected();
+      this.editorCanUse = this.editor !== null && typeof this.editor.editorCreate === 'function' && this.editor.useInSetType.includes(this.instance.define.type.setType);
     },
 
     //#endregion 
@@ -230,10 +238,7 @@ export default defineComponent({
       this.$emit('on-delete-port', this.instance);
     },
 
-    updateTypeEditorInfo() {
-      this.editor = this.instance.getTypeEditor();
-      this.editorCanUse = this.editor !== null && typeof this.editor.editorCreate === 'function' && this.editor.useInSetType.includes(this.instance.define.type.setType);
-    },
+
   }
 })
 </script>

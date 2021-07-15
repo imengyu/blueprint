@@ -3,6 +3,8 @@ import { IBluePrintFlowBlockDefine } from "@/model/Flow/BluePrintFlowBlock";
 import { BluePrintParamEnumDefine, BluePrintParamType } from "@/model/Flow/BluePrintParamType";
 import ParamTypeService from "@/model/Services/ParamTypeService";
 import DocCommentBlockInner from '@/components/Editor/BlockCustom/DocCommentBlockInner.vue'
+import { BluePrintFlowPort } from "@/model/Flow/BluePrintFlowPort";
+import StringUtils from "@/model/Utils/StringUtils";
 
 const blockInGUID = '00000000-0000-0000-0000-000000000001';
 const variableGetGUID = '601F20C4-CAEC-77E1-6286-5E5A4700920C';
@@ -26,10 +28,10 @@ function register() : Array<IBluePrintFlowBlockDefine> {
   //注册转换方法
   registerBaseConverters();
   //注册自定义类型
-  ParamTypeService.registerCustomType(new BluePrintParamEnumDefine("DebugLogLevel", [
+  ParamTypeService.registerCustomType(new BluePrintParamEnumDefine("DebugLogLevel", '调试信息等级', [
     'log','info','warn','error'
   ], '#F7C709'));
-  ParamTypeService.registerCustomType(new BluePrintParamEnumDefine("BasePlatformType", [
+  ParamTypeService.registerCustomType(new BluePrintParamEnumDefine("BasePlatformType", '平台类型', [
     'all','electron','nodejs','cnative'
   ], '#8552a1'));
 
@@ -48,44 +50,36 @@ function registerBaseConverters() {
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('number'),
     toType: new BluePrintParamType('string'), 
-    allowSetType: 'variable', 
     converter: {}
   });
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('bigint'),
     toType: new BluePrintParamType('string'), 
-    allowSetType: 'variable', 
     converter: {}
   });
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('boolean'),
     toType: new BluePrintParamType('string'), 
-    allowSetType: 'variable', 
     converter: {}
   });
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('object'),
     toType: new BluePrintParamType('string'), 
-    allowSetType: 'variable', 
     converter: {}
   });
-
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('string'),
     toType: new BluePrintParamType('number'), 
-    allowSetType: 'variable', 
     converter: {}
   });
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('string'),
     toType: new BluePrintParamType('boolean'), 
-    allowSetType: 'variable', 
     converter: {}
   });
   ParamTypeService.registerTypeCoverter({
     fromType: new BluePrintParamType('any'),
     toType: new BluePrintParamType('string'), 
-    allowSetType: 'variable', 
     converter: {}
   });
 }
@@ -473,7 +467,7 @@ function registerCommentBlock() : Array<IBluePrintFlowBlockDefine> {
 
           //保存鼠标按下时区域内的所有单元
           rect.Set(block.getRect());
-          list.empty();
+          list.clear();
           block.editor.getBlocksInRect(rect).forEach((v) => {
             if(v != block) {
               v.updateLastPos();
@@ -533,8 +527,26 @@ function registerConvertBlock() : Array<IBluePrintFlowBlockDefine> {
       version: 0,
       style: {
         titleBakgroundColor: "rgba(250,250,250,0.6)",
-        minWidth: 0,
+        logoBackground: 'title:转换器',
         titleState: 'hide',
+        customClassNames: 'round',
+      },
+      events: {
+        onAddToEditor(block) {
+          const from = block.options['coverterFrom'] as string;
+          const to = block.options['coverterTo'] as string;
+          if(StringUtils.isNullOrEmpty(from) || StringUtils.isNullOrEmpty(to))
+            return;
+
+          const coverter = ParamTypeService.getTypeCoverter(from, to);
+          if(coverter) {
+            const fromPort = block.getPortByGUID('INPUT') as BluePrintFlowPort;
+            const toPort = block.getPortByGUID('OUTPUT') as BluePrintFlowPort;
+
+            block.changePortParamType(fromPort, coverter.fromType, true, true);
+            block.changePortParamType(toPort, coverter.toType, true, true);
+          }
+        },
       },
       ports: [
         {
@@ -566,11 +578,23 @@ function registerConnBlock() : Array<IBluePrintFlowBlockDefine> {
         minWidth: 0,
         customClassNames: 'flow-block-extended-line',
       },
+      events: {
+        onFlexPortConnect(block, thisPort, anotherPort) {
+          block.allPorts.forEach((port) =>{
+            block.changePortParamType(port, anotherPort.define.type);
+          });
+        },
+        onPortUnConnect(block) {
+          if(block.connectors.length === 0) 
+            block.allPorts.forEach((port) => block.changePortParamType(port, BluePrintParamType.Any()));
+        },
+      },
       ports: [
         {
           guid: 'INPUT',
           type: BluePrintParamType.Any(),
           isRefPassing: true,
+          isFlexible: true,
           direction: 'input',
           defaultConnectPort: true,
         },
@@ -578,51 +602,56 @@ function registerConnBlock() : Array<IBluePrintFlowBlockDefine> {
           guid: 'OUTPUT',
           type: BluePrintParamType.Any(),
           isRefPassing: true,
+          isFlexible: true,
           direction: 'output'
         },
-      ]
+      ],
+      menu: {
+        items: [
+          {
+            label: '集合类型',
+            children: [
+              {
+                label: '变量',
+                onClick: function() { 
+                  this.allPorts.forEach((port) =>{
+                    this.changePortParamSetType(port, 'variable');
+                  });
+                  this.options['type'] = 'variable';
+                }
+              },
+              {
+                label: '数组',
+                onClick: function() { 
+                  this.allPorts.forEach((port) =>{
+                    this.changePortParamSetType(port, 'array');
+                  });
+                  this.options['type'] = 'array';
+                }
+              },
+              {
+                label: '集合',
+                onClick: function() {
+                  this.allPorts.forEach((port) =>{
+                    this.changePortParamSetType(port, 'set');
+                  });
+                  this.options['type'] = 'set';
+                }
+              },
+              {
+                label: '映射',
+                onClick: function() { 
+                  this.allPorts.forEach((port) =>{
+                    this.changePortParamSetType(port, 'dictionary');
+                  });
+                  this.options['type'] = 'dictionary';
+                }
+              },
+            ]
+          }
+        ]
+      }
     }
   ];
-
-  //TODO: 数据延长线右键菜单
-  /*
-  block.blockMenu.items.push({
-    label: '集合类型',
-    children: [
-      {
-        label: '变量',
-        onClick: function() { 
-          this.changePortParamType(this.getPortByGUID('INPUT'), undefined, 'variable'); 
-          this.changePortParamType(this.getPortByGUID('OUTPUT'), undefined, 'variable'); 
-          this.options['type'] = 'variable';
-        }
-      },
-      {
-        label: '数组',
-        onClick: function() { 
-          this.changePortParamType(this.getPortByGUID('INPUT'), undefined, 'array'); 
-          this.changePortParamType(this.getPortByGUID('OUTPUT'), undefined, 'array'); 
-          this.options['type'] = 'array';
-        }
-      },
-      {
-        label: '集合',
-        onClick: function() {
-          this.changePortParamType(this.getPortByGUID('INPUT'), undefined, 'set'); 
-          this.changePortParamType(this.getPortByGUID('OUTPUT'), undefined, 'set'); 
-          this.options['type'] = 'set';
-        }
-      },
-      {
-        label: '映射',
-        onClick: function() { 
-          this.changePortParamType(this.getPortByGUID('INPUT'), undefined, 'dictionary'); 
-          this.changePortParamType(this.getPortByGUID('OUTPUT'), undefined, 'dictionary'); 
-          this.options['type'] = 'dictionary';
-        }
-      },
-    ]
-  })
-  */
 }
 

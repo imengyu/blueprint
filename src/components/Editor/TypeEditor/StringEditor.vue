@@ -16,7 +16,6 @@
 
 <script lang="ts">
 import { CustomStorageObject } from '@/model/BluePrintEditorBase';
-import { BluePrintFlowBlock } from '@/model/Flow/BluePrintFlowBlock';
 import { defineComponent, onMounted, PropType, ref, toRefs } from 'vue'
 
 export default defineComponent({

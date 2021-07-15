@@ -19,6 +19,7 @@ export class Vector2 extends SaveableObject {
   public constructor(x = 0, y = 0) {
     super();
     this.saveClassName = 'Vector2';
+    this.saveableProperties = [ 'x', 'y' ]
     this.y = y;
     this.x = x;
   }

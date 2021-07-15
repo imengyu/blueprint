@@ -1,7 +1,10 @@
 <template>
   <div v-if="instance" 
     ref="block"
-    :class="'flow-block ' + (instance.selected ? 'selected ' : '') + (instance.define.style.customClassNames ? instance.define.style.customClassNames : '')"
+    :class="'flow-block ' + 
+      (instance.selected ? 'selected ' : '') + 
+      (instance.define.style.customClassNames ? instance.define.style.customClassNames : '') + 
+      (twinkleActive ? ' actived' : '')"
     :style="{
       left: `${instance.position.x}px`,
       top: `${instance.position.y}px`,
@@ -18,7 +21,8 @@
     @mouseleave="onMouseLeave($event)"
     @mousemove="onMouseMove($event)"
     @mousewheel="onMouseWhell($event)"
-    @mouseup="onMouseUp($event)">
+    @mouseup="onMouseUp($event)"
+    @contextmenu="onContextmenu($event)">
     <!--注释区域-->
     <div class="flow-block-comment flow-block-no-move" 
       v-show="instance.markOpen && !instance.define.style.noComment"
@@ -53,6 +57,25 @@
       <div class="logo-right" :style="{ display: 'inline-block', backgroundImage: `url('${instance.define.style.logoRight}')` }"></div>
       <div class="logo-bottom" :style="{ display: 'inline-block', backgroundImage: `url('${instance.define.style.logoBottom}')` }"></div>
     </div>
+    <div 
+      v-show="instance.breakpoint!=='none'"
+      :class="'breakpoint-status iconfont'+
+        (instance.breakpoint==='enable'?' icon-breakpoint-active':'')+
+        (instance.breakpoint==='disable'?' icon-breakpoint':'')"
+    ></div>
+    <div 
+      v-show="instance.breakpointTriggered"
+      class="breakpoint-arrow iconfont icon-arrow-down-"></div>
+    <!--背景-->
+    <div 
+      class="background"
+      :style="{
+        background: (typeof instance.define.style.logoBackground==='string' && !instance.define.style.logoBackground.startsWith('title:')) ? `url(${instance.define.style.logoBackground})` : '',
+      }">
+      <span class="big-title" v-if="typeof instance.define.style.logoBackground==='string'&&instance.define.style.logoBackground.startsWith('title:')">
+        {{ instance.define.style.logoBackground.substr(6) }}
+      </span>
+    </div>
     <!--自定义编辑器区域-->
     <block-custom-editor-wrapper
       :block="instance"
@@ -77,10 +100,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, toRefs } from 'vue'
+import { defineComponent, onMounted, PropType, ref, toRefs } from 'vue'
 import { ChunkedPanel, ChunkInstance } from '@/model/Cast/ChunkedPanel';
 import { Vector2 } from '@/model/Base/Vector2';
-import { BluePrintEditorInfo } from '@/model/BluePrintEditor';
+import { BluePrintEditorInstance } from '@/model/BluePrintEditor';
 import { BluePrintFlowBlock } from '@/model/Flow/BluePrintFlowBlock';
 import { BluePrintFlowPortDefine, BluePrintFlowPortDirection } from '@/model/Flow/BluePrintFlowPort';
 import HtmlUtils from '@/model/Utils/HtmlUtils';
@@ -102,7 +125,9 @@ export default defineComponent({
     BlockCustomEditorWrapper,
   },
   name: 'FlowBlock',
-  emits: [ 'on-delete-port' ],
+  emits: [ 
+    'on-delete-port',
+  ],
   props: {
     instance: {
       type: Object as PropType<BluePrintFlowBlock>,
@@ -119,9 +144,22 @@ export default defineComponent({
     
     //#region 回调
 
+    let timerTwinkle = 0;
+    const twinkleActive = ref(false);
+
     instance.value.callbackGetRealSize = getRealSize;  
     instance.value.callbackGetCurrentSizeType = getCurrentSizeType;
     instance.value.callbackUpdateRegion = updateRegion;
+    instance.value.callbackTwinkle = (time) => {
+      //闪烁
+      if(timerTwinkle > 0) clearInterval(timerTwinkle);
+      timerTwinkle = setInterval(() => twinkleActive.value = !twinkleActive.value, 300);
+      setTimeout(() => {
+        twinkleActive.value = false;
+        clearInterval(timerTwinkle);
+        timerTwinkle = 0;
+      }, time);
+    };
      
     function updateRegion() {
       const _instance = instance.value;
@@ -151,6 +189,7 @@ export default defineComponent({
         commentInput.value.innerText = instance.value.markContent;
         commentInputPlaceHolder.value.style.display = StringUtils.isNullOrBlank(instance.value.markContent) ? '' : 'none';
       }
+      onCommentInputInput();
     }
     function onCommentInputPlaceHolderClick() {
       if(commentInputPlaceHolder.value) commentInputPlaceHolder.value.style.display = 'none';
@@ -212,7 +251,7 @@ export default defineComponent({
       const pos = new Vector2();
       const size = getRealSize();
 
-      _instance.editorInfo?.getViewPort().screenPointToViewportPoint(new Vector2(e.x, e.y), pos);
+      _instance.editor?.getViewPort().screenPointToViewportPoint(new Vector2(e.x, e.y), pos);
       pos.substract(_instance.position);
 
       currentSizeType = 0;
@@ -238,7 +277,7 @@ export default defineComponent({
         const _instance = instance.value; 
         const size = new Vector2(_instance.customSize.x, _instance.customSize.y);
         const mousePos = new Vector2();
-        (_instance.editorInfo as BluePrintEditorInfo).getViewPort().screenPointToViewportPoint(new Vector2(e.x, e.y), mousePos);
+        (_instance.editor as BluePrintEditorInstance).getViewPort().screenPointToViewportPoint(new Vector2(e.x, e.y), mousePos);
 
         if (((currentSizeType & SIZE_LEFT) == SIZE_LEFT) && ((currentSizeType & SIZE_TOP) == SIZE_TOP)) {
           //左上
@@ -362,7 +401,7 @@ export default defineComponent({
     function onDocunmentMouseMove(e : MouseEvent) {
 
       const _instance = instance.value; 
-      const _editorInfo = _instance.editorInfo as BluePrintEditorInfo;
+      const _editor = _instance.editor as BluePrintEditorInstance;
 
       if(!_instance.mouseDown)
         return;
@@ -374,7 +413,7 @@ export default defineComponent({
       if(e.buttons == 1){ 
         if(!onMouseResize(e) //Handle mouse resize
           && !_instance.mouseDownInPort && !_instance.mouseConnectingPort) { 
-          let zoom = _editorInfo.getViewPort().scale;
+          let zoom = _editor.getViewPort().scale;
           let pos = new Vector2(
             _instance.lastBlockPos.x + (e.x * zoom - _instance.mouseLastDownPos.x * zoom),
             _instance.lastBlockPos.y + (e.y * zoom - _instance.mouseLastDownPos.y * zoom)
@@ -383,17 +422,17 @@ export default defineComponent({
 
              //如果当前块没有选中，在这里切换选中状态
             if(!_instance.selected) {
-              let multiSelectBlocks = _editorInfo.getSelectBlocks();
+              let multiSelectBlocks = _editor.getSelectBlocks();
               if(multiSelectBlocks.length == 0 || !multiSelectBlocks.contains(_instance as BluePrintFlowBlock)) 
-                _editorInfo.selectBlock(_instance as BluePrintFlowBlock, false);
+                _editor.selectBlock(_instance as BluePrintFlowBlock, false);
               else 
-                _editorInfo.selectBlock(_instance as BluePrintFlowBlock, true);
+                _editor.selectBlock(_instance as BluePrintFlowBlock, true);
             }
 
             //移动
             _instance.lastMovedBlock = true;
             _instance.position = pos;
-            _editorInfo.onMoveBlock(
+            _editor.onMoveBlock(
               _instance as BluePrintFlowBlock, 
               new Vector2(e.x - _instance.mouseLastDownPos.x, e.y - _instance.mouseLastDownPos.y).multiply(zoom)
             );
@@ -405,7 +444,7 @@ export default defineComponent({
     function onDocunmentMouseUp(e : MouseEvent) {
 
       const _instance = instance.value;
-      const _editorInfo = _instance.editorInfo as BluePrintEditorInfo;
+      const _editor = _instance.editor as BluePrintEditorInstance;
 
       if(_instance.mouseDown) {
         _instance.mouseDown = false;
@@ -415,14 +454,14 @@ export default defineComponent({
           return;
         if(!testIsDownInControl(e)) {
           if(_instance.lastMovedBlock) 
-            _editorInfo.onMoveBlockEnd(_instance as BluePrintFlowBlock);
-          else if(_editorInfo.getSelectBlockCount() == 0 || e.button == 0)   
-            _editorInfo.selectBlock(_instance as BluePrintFlowBlock, false);
+            _editor.onMoveBlockEnd(_instance as BluePrintFlowBlock);
+          else if(_editor.getSelectBlockCount() == 0 || e.button == 0)   
+            _editor.selectBlock(_instance as BluePrintFlowBlock, false);
         }
         updateCursor();
 
         if(lastResized)
-          _editorInfo.onMoveBlockEnd(_instance as BluePrintFlowBlock);
+          _editor.onMoveBlockEnd(_instance as BluePrintFlowBlock);
       }
 
       document.removeEventListener('mousemove', onDocunmentMouseMove);
@@ -460,12 +499,40 @@ export default defineComponent({
     }
     //#endregion 
 
+    //#region 右键菜单
+
+    function onContextmenu(e : MouseEvent) {
+      e.preventDefault();
+      instance.value.editor?.showBlockRightMenu(instance.value as BluePrintFlowBlock, new Vector2(e.x, e.y));
+      return false;
+    }
+
+    //#endregion
+
+    onMounted(() => {
+      setTimeout(() => {
+        const _instance = instance.value;
+        const size = getRealSize();
+
+        if(_instance.shouldMoveToSelfCenter) {
+          _instance.position.set(
+            _instance.position.x - size.x / 2,
+            _instance.position.y - size.y / 2,
+          );
+          _instance.editor?.updateBlockForMoveEnd(_instance as BluePrintFlowBlock);
+        }
+
+        updateComment();
+      }, 100)
+    })
+
     return {
       block,
       cursor,
       commentTop,
       commentInput,
       commentInputPlaceHolder,
+      twinkleActive,
       updateComment,
       updateRegion,
       closeComment,
@@ -480,6 +547,7 @@ export default defineComponent({
       onMouseWhell,
       onMouseUp,
       onUserAddPort,
+      onContextmenu,
     }
   }
 })

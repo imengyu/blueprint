@@ -1,5 +1,5 @@
 /// <reference types="react-vue" />
 
-import './extends.d.ts'
+import './extends'
 
 declare module 'glolbal';

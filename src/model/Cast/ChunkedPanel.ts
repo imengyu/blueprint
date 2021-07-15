@@ -88,7 +88,7 @@ export class ChunkedPanel {
     instance.parents.forEach((p) => {
       p.childs.remove(instance);
     });
-    instance.parents.empty();
+    instance.parents.clear();
   }
   /**
    * 更新实例的矩形。
@@ -101,7 +101,7 @@ export class ChunkedPanel {
       const p = instance.parents[i];
       if(!chunks.contains(p)) {
         p.childs.remove(instance);
-        instance.parents.remove(i);
+        instance.parents.removeIndex(i);
       }
     }
     chunks.forEach((c) => {

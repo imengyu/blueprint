@@ -32,7 +32,7 @@ function isEleEditable(e: HTMLElement) : boolean {
  */
 function getTop(e: HTMLElement, stopClass ? : string) : number {
   let offset = e.offsetTop;
-  if (e.offsetParent != null && stopClass && !(<HTMLElement>e.offsetParent).classList.contains(stopClass)) 
+  if (e.offsetParent != null && (!stopClass || !(<HTMLElement>e.offsetParent).classList.contains(stopClass)) )
     offset += getTop(<HTMLElement>e.offsetParent, stopClass);
   return offset;
 }
@@ -43,7 +43,7 @@ function getTop(e: HTMLElement, stopClass ? : string) : number {
  */
 function getLeft(e: HTMLElement, stopClass ? : string) : number {
   let offset = e.offsetLeft;
-  if (e.offsetParent != null && stopClass && !(<HTMLElement>e.offsetParent).classList.contains(stopClass)) 
+  if (e.offsetParent != null && (!stopClass || !(<HTMLElement>e.offsetParent).classList.contains(stopClass))) 
     offset += getLeft(<HTMLElement>e.offsetParent, stopClass);
     
   return offset;

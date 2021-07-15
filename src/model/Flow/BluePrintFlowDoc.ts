@@ -1,10 +1,13 @@
 import logger from "../Base/Logger";
+import { BluePrintDocEditorInstance, BluePrintEditorInstance } from "../BluePrintEditor";
 import { BluePrintEditorViewport, IKeyValueObject } from "../BluePrintEditorBase";
 import BlockRegisterService from "../Services/BlockRegisterService";
 import RandomUtils from "../Utils/RandomUtils";
 import { SaveableObject } from "../Utils/SaveObject";
 import { BluePrintFlowBlock } from "./BluePrintFlowBlock";
 import { BluePrintFlowConnector } from "./BluePrintFlowConnector";
+import { IBluePrintFlowPortDefine } from "./BluePrintFlowPort";
+import { BluePrintFlowVariable } from "./BluePrintFlowVariable";
 
 /**
  * 流图文档
@@ -32,6 +35,17 @@ export class BluePrintFlowDoc extends SaveableObject {
    * 所有图表
    */
   graphs = new Array<BluePrintFlowGraph>();
+  /**
+   * 变量
+   */
+  variables : Array<BluePrintFlowVariable> = [];
+
+  getVariableByName(name : string) : BluePrintFlowVariable|null {
+    for (let i = this.variables.length - 1; i >= 0; i--) {
+      if(this.variables[i].name == name) return this.variables[i];
+    }
+    return null;
+  }
 
   constructor(path : string) {
     super();
@@ -44,7 +58,6 @@ export class BluePrintFlowDoc extends SaveableObject {
     this.graphs.forEach((g) => {
       graphs.push(g.save());
     })
-
     const o = {
       name: this.name,
       uid: this.uid,
@@ -59,7 +72,8 @@ export class BluePrintFlowDoc extends SaveableObject {
     if(data) {
       this.graphs = [];
       this.name = data.name as string;
-      this.uid = data.uid as string;
+      if(data.uid)
+        this.uid = data.uid as string;
       this.version = data.version as string;
       this.description = data.description as string;
       this.author = data.author as string;
@@ -68,18 +82,67 @@ export class BluePrintFlowDoc extends SaveableObject {
         graph.load(g);
         this.graphs.push(graph)
       });
+      
+      if(this.graphs.length > 0)
+        this.activeGraph = this.graphs[0];
     }
   }
 
-  addGraph(name: string, type: BluePrintFlowGraphType) : void {
+  addGraph(name: string, type: BluePrintFlowGraphType) : BluePrintFlowGraph {
     const graph = new BluePrintFlowGraph(this);
     graph.name = name;
     graph.type = type;
     this.graphs.push(graph)
+    return graph;
   }
   removeGraph(graph : BluePrintFlowGraph) : void {
     graph.docunment = null;
     this.graphs.remove(graph)
+  }
+  getGraphByName(name : string) : BluePrintFlowGraph|null {
+    for (let i = this.graphs.length - 1; i >= 0; i--) {
+      if(this.graphs[i].name == name) return this.graphs[i];
+    }
+    return null;
+  }
+
+  initNew() : void {
+    // eslint-disable-next-line
+    this.load(require('@/assets/json/DefaultGraph.json'));
+  }
+
+  isFileChanged() : boolean {
+    for (let i = 0; i < this.graphs.length; i++) {
+      if(this.graphs[i].fileChanged)
+        return true;
+    }
+    return false;
+  }
+
+  //编辑器
+  //==========================
+
+  /**
+   * 当前激活的编辑器实例
+   */
+  activeEditor: BluePrintDocEditorInstance|null = null;
+  activeGraph: BluePrintFlowGraph|null = null;
+
+  getUseableVariableName(baseName : string) : string {
+    for(let i = this.variables.length, c = this.variables.length + 10; i < c; i++) {
+      const name = baseName + i;
+      if(this.getVariableByName(name) == null)
+        return name;
+    }
+    return baseName;
+  }
+  getUseableGraphName(baseName : string) : string {
+    for(let i = this.graphs.length, c = this.graphs.length + 10; i < c; i++) {
+      const name = baseName + i;
+      if(this.getGraphByName(name) == null)
+        return name;
+    }
+    return baseName;
   }
 }
 
@@ -98,7 +161,7 @@ export class BluePrintFlowGraph extends SaveableObject {
   version = '';
   description = '';
   author = '';
-  loadStatus : 'notload'|'loaded'|'error' = 'notload';
+  loadStatus : 'notload'|'loaded'|'error'|'loading' = 'notload';
 
   constructor(docunment ?: BluePrintFlowDoc) {
     super();
@@ -107,6 +170,10 @@ export class BluePrintFlowGraph extends SaveableObject {
   }
 
   save() : IKeyValueObject {
+
+    if(this.activeEditor) {
+      this.viewPort.set(this.activeEditor.getViewPort());
+    }
 
     const guidMap = new Array<string>();
     this.blocks.forEach((b) => guidMap.addOnce(b.guid));
@@ -135,6 +202,7 @@ export class BluePrintFlowGraph extends SaveableObject {
       }
     })
 
+    this.fileChanged = false;
 
     const o = {
       guidMap,
@@ -162,12 +230,12 @@ export class BluePrintFlowGraph extends SaveableObject {
       this.description = data.description as string;
       this.author = data.author as string;
       this.type = data.type as BluePrintFlowGraphType;
-      this.viewPort.load(data);
+      this.viewPort.load(data.viewPort as IKeyValueObject);
 
       const guidMap = data.guidMap as Array<string>; 
       const uidMap = data.uidMap as Array<string>;
-      const blocks = data.guidMap as Array<IKeyValueObject>;
-      const connectors = data.guidMap as Array<IKeyValueObject>;
+      const blocks = data.blocks as Array<IKeyValueObject>;
+      const connectors = data.connectors as Array<IKeyValueObject>;
 
       blocks.forEach((block) => {
         const guid = guidMap[block.guidMap as number];
@@ -181,7 +249,7 @@ export class BluePrintFlowGraph extends SaveableObject {
         const blockInstace = new BluePrintFlowBlock(blockDefine);
         blockInstace.graph = this;
         blockInstace.load((block.instance as IKeyValueObject) || {});
-        this.blocks.set(block.uid as string, blockInstace);
+        this.blocks.set(blockInstace.uid as string, blockInstace);
       });
 
       connectors.forEach((connector) => {
@@ -201,6 +269,7 @@ export class BluePrintFlowGraph extends SaveableObject {
         this.connectors.push(connectorInstance);
       });
 
+      this.fileChanged = false;
     }
   }
 
@@ -233,16 +302,56 @@ export class BluePrintFlowGraph extends SaveableObject {
     return this.blocks.get(uid) || null;
   }
 
+  initNew() : void {
+    //
+  }
+
   /**
    * 连接
    */
   connectors : Array<BluePrintFlowConnector> = [];
+
   /**
-    * 图表所在文档
-    */
+   * 变量
+   */
+  variables : Array<BluePrintFlowVariable> = [];
+  /**
+   * 指示当前函数是否是静态
+   */
+  static = false;
+
+  getVariableByName(name : string) : BluePrintFlowVariable|null {
+    for (let i = this.variables.length - 1; i >= 0; i--) {
+      if(this.variables[i].name == name) return this.variables[i];
+    }
+    return null;
+  }
+
+  public inputPorts = new Array<IBluePrintFlowPortDefine>();
+  public outputPorts = new Array<IBluePrintFlowPortDefine>();
+
+  //编辑器
+  //==========================
+
+  /**
+   * 图表所在文档
+   */
   docunment : BluePrintFlowDoc|null;
   /**
    * 指定当前文件是否已经更改
    */
   fileChanged = false;
+  /**
+   * 当前激活的编辑器实例
+   */
+  activeEditor: BluePrintEditorInstance|null = null;
+
+  getUseableVariableName(baseName : string) : string {
+    for(let i = this.variables.length, c = this.variables.length + 10; i < c; i++) {
+      const name = baseName + i;
+      if(this.getVariableByName(name) == null)
+        return name;
+    }
+    return baseName;
+  }
 }

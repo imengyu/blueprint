@@ -76,7 +76,7 @@ export class Logger {
     this.listeners.forEach((c) => {
       this.logTempary.forEach(({ tag, level, content, extendObj }) => c(tag, level, content, extendObj));
     })
-    this.logTempary.empty();
+    this.logTempary.clear();
   }
 
   public makeSrcPort(port : BluePrintFlowPort) : LogExtendData {

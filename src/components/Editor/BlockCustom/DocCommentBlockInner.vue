@@ -29,7 +29,7 @@ export default defineComponent({
         _editor.style.height = (typeof _block.options['height'] === 'number' ? _block.options['height'] : 122) + 'px';
         _editor.onchange = () => { 
           _block.options['content'] = _editor.value; 
-          _block.editorInfo?.markUpFileChanged();
+          _block.editor?.markGraphChanged();
         };
         _editor.oncontextmenu = (e) => {
           //_block.editor.showInputRightMenu(new Vector2(e.x, e.y), <HTMLInputElement>e.target);     

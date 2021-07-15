@@ -33,7 +33,7 @@ export default defineComponent({
         case 'nameComponent':
           childs.push(
             h(
-              resolveComponent((ret.ret as string)),
+              resolveComponent(ret.ret as string) as string,
               { 
                 customData: this.$props.port.parent.options[`port_${this.$props.port.guid}_custom_data`] || {},
                 port: this.$props.port,
@@ -52,7 +52,7 @@ export default defineComponent({
         case 'nameComponent':
           childs.push(
             h(
-              resolveComponent((ret.ret as string)),
+              resolveComponent(ret.ret as string) as string,
               { 
                 customData: this.$props.port.parent.options[`port_${this.$props.port.guid}_editor_data`] || {},
                 value: this.$props.value,

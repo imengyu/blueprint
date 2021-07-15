@@ -50,9 +50,18 @@ arrayProtoType.addOnce = function(item : any) {
   else return this.push(item);
 }
 arrayProtoType.empty = function() {
+  return this.length == 0;
+}
+arrayProtoType.clear = function() {
   this.splice(0, this.length);
 }
-
+arrayProtoType.removeIndex = function(index : number) {
+  if(index >= 0 && index <= this.length) {
+    this.splice(index, 1);
+    return true;
+  } 
+  return false;
+}
 if(typeof arrayProtoType.remove !== 'function')
   arrayProtoType.remove = function(item : any) {
     const index = this.indexOf(item);
