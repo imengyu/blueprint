@@ -4,7 +4,7 @@
     <select v-model="zoomSelectValue" @change="zoomUpdate(zoomSelectValue / 100)">
       <option v-for="(v, i) in zoomValues" :key="i" :value="v">{{v}}%</option>
     </select>
-    <span>{{parseInt(viewPort.scale*100)}}%</span>
+    <span>{{Math.floor(viewPort.scale*100)}}%</span>
     <a href="javascript:;" class="right iconfont icon-zoom" title="放大" @click="zoomIn()"></a>
   </div>
 </template>
@@ -37,7 +37,7 @@ export default defineComponent({
     zoomOut() {
       const viewScale = this.viewPort.scale;
       if(viewScale > 0.4) this.zoomUpdate(viewScale - 0.1);
-      else this.zoomUpdate(0.4);
+      else this.zoomUpdate(0.3);
     },
     /**
      * 缩小视图

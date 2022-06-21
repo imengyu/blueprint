@@ -73,7 +73,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, onMounted, PropType, ref, SetupContext, toRefs } from 'vue';
+import { defineComponent, onBeforeUnmount, onMounted, PropType, Ref, ref, SetupContext, toRefs } from 'vue';
 import { BluePrintEditorViewport } from '@/model/BluePrintEditorBase'
 import { BluePrintEditorInstance, BluePrintEditorSettings, IBluePrintEditorEventSettings } from '@/model/BluePrintEditor'
 import { BluePrintFlowGraph } from '@/model/Flow/BluePrintFlowDoc';
@@ -94,6 +94,8 @@ import ZoomTool from './Base/ZoomTool.vue'
 import BasePanels, { IBasePanels } from './Base/BasePanels.vue'
 import BlockRegisterService from '@/model/Services/BlockRegisterService';
 import app from '@/main';
+import { ChunkedPanel } from '@/model/Cast/ChunkedPanel';
+import { Rect } from '@/model/Base/Rect';
 
 export default defineComponent({
   name: 'BluePrintGraphEditor',
@@ -234,13 +236,13 @@ export default defineComponent({
       getEditor: () => editor,
       getEvents,
       connectingInfo,
-      multiSelectRect,
+      multiSelectRect: multiSelectRect as Ref<Rect>,
       isMulitSelect,
       isMultiSelected,
       blockMap,
       blockMapBackground,
       connectors,
-      chunkedPanel,
+      chunkedPanel: chunkedPanel as Ref<ChunkedPanel>,
       basePanels,
     }
   },

@@ -49,7 +49,7 @@ export class ToolTipMouseControlUtils {
     this.timerHidetooltipDelay = setTimeout(() => {
       this.timerHidetooltipDelay = 0;
       callback();
-    }, delay);
+    }, delay) as unknown as number;
   }
   clearHideTooltipDelay() : void {
     if (this.timerHidetooltipDelay != 0) {
@@ -68,6 +68,6 @@ export class ToolTipMouseControlUtils {
     this.timerShowTooltipDelay = setTimeout(() => {
       this.timerShowTooltipDelay = 0;
       callback();
-    }, 700);
+    }, 700) as unknown as number;
   }
 }

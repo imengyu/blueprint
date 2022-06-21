@@ -9,6 +9,7 @@ import HtmlUtils from "@/model/Utils/HtmlUtils";
  * 编辑器鼠标事件处理
  * @returns
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function useEditorMouseEvents(editor: BluePrintEditorInstance) {
   const mouseInfo = new BluePrintEditorMouseInfo();
   const mouseDownViewPortPos = new Vector2();
@@ -182,6 +183,7 @@ export function useEditorMouseEvents(editor: BluePrintEditorInstance) {
   }
   function onMouseWhell(e: WheelEvent) {
     updateMousePos(e);
+    e.preventDefault();
 
     //TODO: 缩放功能
   }

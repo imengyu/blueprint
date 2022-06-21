@@ -50,7 +50,7 @@ export function useEditorSizeChecker(editorHost : Ref<HTMLElement|undefined>, vi
   }
 
   onMounted(() => {
-    tickCheckTimer = setInterval(onEditorCheckTick);
+    tickCheckTimer = setInterval(onEditorCheckTick) as unknown as number;
     window.addEventListener('resize', onWindowSizeChanged);
   })
   onBeforeUnmount(() => {

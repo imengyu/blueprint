@@ -96,7 +96,7 @@ export class BluePrintEditorViewport extends SaveableObject {
   /**
    * 屏幕坐标减去编辑器绝对坐标
    */
-   fixScreenPosWithEditorAbsolutePos(point: Vector2): Vector2 {
+  fixScreenPosWithEditorAbsolutePos(point: Vector2): Vector2 {
     point.substract(this.editorAbsolutePos);
     return point
   }

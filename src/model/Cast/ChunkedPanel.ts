@@ -61,8 +61,9 @@ export class ChunkedPanel {
 
         ctx.strokeStyle = '#f00';
         chunk.childs.forEach((c) => {
-          ctx.strokeRect(c.rect.x - startPos.x, c.rect.y - startPos.y, c.rect.w * scale, c.rect.h * scale);
-          ctx.fillText(c.rect.toString(), c.rect.x - startPos.x, c.rect.y - startPos.y);
+          const pos = new Vector2(c.rect.x, c.rect.y);
+          ctx.strokeRect(pos.x, pos.y, c.rect.w * scale, c.rect.h * scale);
+          ctx.fillText(c.rect.toString(), pos.x, pos.y);
         });
 
       }

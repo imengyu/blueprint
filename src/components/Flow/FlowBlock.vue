@@ -13,7 +13,7 @@
       minWidth: instance.define.style.minWidth > 0 ? `${instance.define.style.minWidth}px` : '',
       minHeight: instance.define.style.minHeight > 0 ? `${instance.define.style.minHeight}px` : '',
       maxWidth: instance.define.style.maxWidth > 0 ? `${instance.define.style.maxWidth}px` : '',
-      maxHeighth: instance.define.style.maxHeight > 0 ? `${instance.define.style.maxHeight}px` : '',
+      maxHeight: instance.define.style.maxHeight > 0 ? `${instance.define.style.maxHeight}px` : '',
       cursor: cursor,
     }"
     @mousedown="onMouseDown($event)"
@@ -153,7 +153,7 @@ export default defineComponent({
     instance.value.callbackTwinkle = (time) => {
       //闪烁
       if(timerTwinkle > 0) clearInterval(timerTwinkle);
-      timerTwinkle = setInterval(() => twinkleActive.value = !twinkleActive.value, 300);
+      timerTwinkle = setInterval(() => twinkleActive.value = !twinkleActive.value, 300) as unknown as number;
       setTimeout(() => {
         twinkleActive.value = false;
         clearInterval(timerTwinkle);
@@ -189,7 +189,7 @@ export default defineComponent({
         commentInput.value.innerText = instance.value.markContent;
         commentInputPlaceHolder.value.style.display = StringUtils.isNullOrBlank(instance.value.markContent) ? '' : 'none';
       }
-      onCommentInputInput();
+      setTimeout(() => onCommentInputInput(), 200);
     }
     function onCommentInputPlaceHolderClick() {
       if(commentInputPlaceHolder.value) commentInputPlaceHolder.value.style.display = 'none';
@@ -471,7 +471,7 @@ export default defineComponent({
       if(testIsDownInControl(e)) 
         e.stopPropagation();
     }
-    function onMouseUp(e : WheelEvent) {
+    function onMouseUp(e : MouseEvent) {
       if(testIsDownInControl(e)) {
         const _instance = instance.value;
         //大小更改

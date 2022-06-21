@@ -1,9 +1,6 @@
 <template>
-  <div class="">
-    <div class="">
-      
-    </div>
-    <blue-print-graph-editor
+  <div class="blueprint-editor">
+    <BluePrintGraphEditor
       v-for="(graph, i) in openedGraphs"
       v-show="activeGraph === graph"
       :settings="settings"

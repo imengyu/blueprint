@@ -91,6 +91,9 @@ export class Rect extends SaveableObject {
   public getBottom() : number { return this.h < 0 ? this.y : this.y + this.h; }
   public getLeft() : number { return this.w < 0 ? this.x + this.w : this.x; }
   public getTop() : number { return this.h < 0 ? this.y + this.h : this.y; }
+  public getPoint() : Vector2 { 
+    return new Vector2(this.x, this.y);
+  }
 
   private center = new Vector2();
 

@@ -1,5 +1,4 @@
 import { Vector2 } from "@/model/Base/Vector2";
-import HtmlUtils from "@/model/Utils/HtmlUtils";
 import RandomUtils from "@/model/Utils/RandomUtils";
 import StringUtils from "@/model/Utils/StringUtils";
 import { App } from "vue";
@@ -137,7 +136,7 @@ function registerHideTooltipDelay(callback: () => void) : void {
   timerHidetooltipDelay = setTimeout(() => {
     timerHidetooltipDelay = null;
     callback();
-  }, 200);
+  }, 200) as unknown as number;
 }
 function clearHideTooltipDelay() : void {
   if(timerHidetooltipDelay != null) {
@@ -157,5 +156,5 @@ function registerShowTooltipDelay(callback: () => void) : void {
   timerShowTooltipDelay = setTimeout(() => {
     timerShowTooltipDelay = null;
     callback()
-  }, 700);
+  }, 700) as unknown as number;
 }

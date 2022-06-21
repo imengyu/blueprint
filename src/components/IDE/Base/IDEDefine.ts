@@ -1,8 +1,6 @@
 import { Vector2 } from "@/model/Base/Vector2";
 import { ChooseTypePanelCallback } from "@/model/BluePrintEditor";
 import { BluePrintFlowDoc } from "@/model/Flow/BluePrintFlowDoc";
-import { BluePrintFlowPortDirection } from "@/model/Flow/BluePrintFlowPort";
-import { BluePrintParamType } from "@/model/Flow/BluePrintParamType";
 import { IOMapping } from "@/model/IO/IOMappingForIDE";
 import { IDockHost } from "../DockLayout/DockDefine";
 

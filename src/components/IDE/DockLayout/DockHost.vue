@@ -854,7 +854,7 @@ export default defineComponent({
   },
   mounted() {
     setTimeout(() => {
-      this.checkSizeChangedTimer = setInterval(this.checkSizeChangedTick, 1000);
+      this.checkSizeChangedTimer = setInterval(this.checkSizeChangedTick, 1000) as unknown as number;
       this.dockHost = this;
       this.host = this.$refs.host as HTMLDivElement;
       this.lastSize.x = this.host.clientWidth;
