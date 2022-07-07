@@ -11,15 +11,20 @@ export default defineComponent({
   props: {
     createEditorFunction: {
       type: Function as PropType<BluePrintFlowPortCreateEditorFunction>,
+      default: null,
     },
     createTypeEditorFunction: {
       type: Function as PropType<BluePrintFlowPortCreateEditorFunction>,
+      default: null,
     },
     port: {
       type: Object as PropType<BluePrintFlowPort>,
       default: null,
+    }, 
+    value: {
+      type: Object as PropType<SaveableTypes>,
+      default: null,
     },
-    value: Object,
     noTypeEditor: Boolean,
   },
   render() {

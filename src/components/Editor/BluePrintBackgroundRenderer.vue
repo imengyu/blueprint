@@ -58,7 +58,7 @@ export default defineComponent({
       chunkedPanel,
       drawDebugInfo,
     } = toRefs(props);
-
+ 
     let ctx : CanvasRenderingContext2D|null = null;
     let renderAnimId = 0;
 

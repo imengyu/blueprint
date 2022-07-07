@@ -111,6 +111,8 @@ export class ChunkedPanel {
     })
   }
 
+  
+
   private getChunk(x : number, y : number, forceNoCreate = false) {
     const chunkStr = `${x}:${y}`;
     let chunk = this.chunk.get(chunkStr);
